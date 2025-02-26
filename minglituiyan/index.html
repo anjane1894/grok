@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">仙风道骨算命</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">仙風道骨命理推演</h1>
+        <div class="bagua">
+            <img src="bagua.jpeg" alt="Bagua" width="100" height="100">
+        </div>
+        <div class="lang-switcher">
+            <button onclick="switchLanguage('zh-CN')">简体</button>
+            <button onclick="switchLanguage('zh-TW')">繁體</button>
+            <button onclick="switchLanguage('en')">English</button>
+            <button onclick="switchLanguage('ja')">日本語</button>
+        </div>
+        <form id="fortuneForm">
+            <label for="name" id="nameLabel">姓名:</label>
+            <input type="text" id="name" required>
+            
+            <label for="birthYear" id="yearLabel">生年:</label>
+            <select id="birthYear" required>
+                <option value="" id="yearPlaceholder">選擇年份</option>
+            </select>
+            
+            <label for="birthMonth" id="monthLabel">生月:</label>
+            <select id="birthMonth" required>
+                <option value="" id="monthPlaceholder">選擇月份</option>
+                <option value="1" id="month1">正月</option>
+                <option value="2" id="month2">二月</option>
+                <option value="3" id="month3">三月</option>
+                <option value="4" id="month4">四月</option>
+                <option value="5" id="month5">五月</option>
+                <option value="6" id="month6">六月</option>
+                <option value="7" id="month7">七月</option>
+                <option value="8" id="month8">八月</option>
+                <option value="9" id="month9">九月</option>
+                <option value="10" id="month10">十月</option>
+                <option value="11" id="month11">十一月</option>
+                <option value="12" id="month12">十二月</option>
+            </select>
+            
+            <label for="birthDay" id="dayLabel">生日:</label>
+            <select id="birthDay" required>
+                <option value="" id="dayPlaceholder">選擇日期</option>
+            </select>
+            
+            <label for="birthTime" id="timeLabel">出生时间:</label>
+            <input type="time" id="birthTime" step="1" required>
+            
+            <button type="submit" id="submitBtn">推演命理</button>
+        </form>
+        <div id="result" class="result"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

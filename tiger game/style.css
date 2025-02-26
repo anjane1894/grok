@@ -1,0 +1,149 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.background-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.slot-machine {
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    width: 700px;
+    z-index: 1;
+}
+
+.logo {
+    width: 150px; /* 可根据实际图片调整大小 */
+    height: auto;
+    margin-bottom: 10px;
+}
+
+h1 {
+    margin: 0 0 20px;
+    font-size: 36px;
+    color: #333;
+}
+
+.game-container {
+    margin-bottom: 20px;
+}
+
+.reels {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.reel {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #000;
+    margin: 0 10px;
+    font-size: 36px;
+    line-height: 80px;
+    text-align: center;
+    background-color: #fff;
+    transition: transform 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.spinning {
+    transform: rotateX(360deg);
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.bet-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#spin-button {
+    padding: 15px 50px;
+    font-size: 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 200px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+#stop-button {
+    background-color: #f44336;
+    color: white;
+}
+
+#restart-button {
+    background-color: #2196F3;
+    color: white;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#result, #balance {
+    margin-top: 15px;
+    font-size: 20px;
+}
+
+.info-container {
+    text-align: left;
+    padding: 0 20px;
+}
+
+.paytable, .rules {
+    margin-bottom: 20px;
+}
+
+.paytable h3, .rules h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.rules ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+.rules p, .paytable p {
+    margin: 5px 0;
+}
