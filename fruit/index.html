@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消消乐游戏</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score, .moves, .time {
+            text-align: center;
+        }
+        
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-gap: 4px;
+            max-width: 500px;
+            width: 100%;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .tile {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
+            font-size: 24px;
+            user-select: none;
+            position: relative;
+        }
+        
+        .tile:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px gold;
+        }
+        
+        .removing {
+            animation: remove-animation 0.5s ease-out;
+        }
+        
+        .dropping {
+            animation: drop-animation 0.5s ease-in;
+        }
+        
+        .new-tile {
+            animation: new-tile-animation 0.5s ease-out;
+        }
+        
+        @keyframes remove-animation {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes drop-animation {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes new-tile-animation {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        
+        @media (max-width: 500px) {
+            #game-board {
+                grid-template-columns: repeat(8, 1fr);
+                grid-gap: 2px;
+                padding: 5px;
+            }
+            
+            .tile {
+                font-size: 18px;
+            }
+            
+            .game-info {
+                flex-direction: row;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>消消乐游戏</h1>
+    </header>
+    
+    <div class="game-info">
+        <div class="score">得分: <span id="score">0</span></div>
+        <div class="moves">步数: <span id="moves">0</span></div>
+        <div class="time">时间: <span id="time">60</span>s</div>
+    </div>
+    
+    <div id="game-board"></div>
+    
+    <div class="controls">
+        <button id="new-game">新游戏</button>
+        <button id="hint">提示</button>
+    </div>
+    
+    <script>
+        // 游戏配置
+        const config = {
+            rows: 8,
+            cols: 8,
+            types: ["🍎", "🍊", "🍋", "🍇", "🍉", "🍓"],
+            minMatch: 3,
+            timeLimit: 60,
+            animationDuration: 500 // 动画持续时间(毫秒)
+        };
+        
+        // 游戏状态
+        let gameState = {
+            board: [],
+            score: 0,
+            moves: 0,
+            selected: null,
+            timeRemaining: config.timeLimit,
+            timer: null,
+            gameOver: false,
+            animating: false
+        };
+        
+        // DOM元素
+        const boardElement = document.getElementById("game-board");
+        const scoreElement = document.getElementById("score");
+        const movesElement = document.getElementById("moves");
+        const timeElement = document.getElementById("time");
+        const newGameButton = document.getElementById("new-game");
+        const hintButton = document.getElementById("hint");
+        
+        // 初始化游戏
+        function initGame() {
+            gameState = {
+                board: [],
+                visualBoard: [], // 表示当前可视状态的板
+                score: 0,
+                moves: 0,
+                selected: null,
+                timeRemaining: config.timeLimit,
+                timer: null,
+                gameOver: false,
+                hintTimeout: null,
+                animating: false
+            };
+            
+            clearTimeout(gameState.hintTimeout);
+            scoreElement.textContent = "0";
+            movesElement.textContent = "0";
+            timeElement.textContent = config.timeLimit;
+            
+            // 创建游戏板
+            createBoard();
+            
+            // 初始化可视化游戏板
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            
+            // 渲染游戏板
+            renderBoard();
+            
+            // 开始计时器
+            startTimer();
+        }
+        
+        // 创建游戏板
+        function createBoard() {
+            for (let row = 0; row < config.rows; row++) {
+                gameState.board[row] = [];
+                for (let col = 0; col < config.cols; col++) {
+                    let type;
+                    do {
+                        type = getRandomTileType();
+                        gameState.board[row][col] = type;
+                    } while (checkInitialMatches(row, col));
+                }
+            }
+            
+            // 确保游戏板有可行的移动
+            while (!hasPossibleMoves()) {
+                createBoard();
+            }
+        }
+        
+        // 获取随机瓷砖类型
+        function getRandomTileType() {
+            return config.types[Math.floor(Math.random() * config.types.length)];
+        }
+        
+        // 检查初始匹配（防止游戏开始就有匹配组合）
+        function checkInitialMatches(row, col) {
+            // 检查水平匹配
+            if (col >= 2) {
+                if (gameState.board[row][col] === gameState.board[row][col-1] && 
+                    gameState.board[row][col] === gameState.board[row][col-2]) {
+                    return true;
+                }
+            }
+            
+            // 检查垂直匹配
+            if (row >= 2) {
+                if (gameState.board[row][col] === gameState.board[row-1][col] && 
+                    gameState.board[row][col] === gameState.board[row-2][col]) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // 渲染游戏板
+        function renderBoard() {
+            boardElement.innerHTML = "";
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    
+                    // 设置瓷砖颜色和内容
+                    const type = gameState.visualBoard[row]?.[col] || gameState.board[row][col];
+                    tile.textContent = type;
+                    
+                    // 设置背景颜色
+                    const colors = {
+                        "🍎": "#ff6b6b",
+                        "🍊": "#ffa94d",
+                        "🍋": "#ffe066",
+                        "🍇": "#cc5de8",
+                        "🍉": "#20c997",
+                        "🍓": "#ff8787"
+                    };
+                    
+                    tile.style.backgroundColor = colors[type] || "#ddd";
+                    
+                    // 设置选中状态
+                    if (gameState.selected && 
+                        gameState.selected.row === row && 
+                        gameState.selected.col === col) {
+                        tile.classList.add("selected");
+                    }
+                    
+                    // 添加点击事件
+                    tile.addEventListener("click", () => {
+                        if (gameState.gameOver || gameState.animating) return;
+                        
+                        handleTileClick(row, col);
+                    });
+                    
+                    boardElement.appendChild(tile);
+                }
+            }
+        }
+        
+        // 处理瓷砖点击
+        function handleTileClick(row, col) {
+            if (gameState.selected) {
+                // 如果已经有选中的瓷砖，检查是否相邻
+                const selectedRow = gameState.selected.row;
+                const selectedCol = gameState.selected.col;
+                
+                if (isAdjacent(row, col, selectedRow, selectedCol)) {
+                    // 交换瓷砖
+                    swapTiles(row, col, selectedRow, selectedCol);
+                    gameState.selected = null;
+                } else {
+                    // 选择新的瓷砖
+                    gameState.selected = { row, col };
+                    renderBoard();
+                }
+            } else {
+                // 选择瓷砖
+                gameState.selected = { row, col };
+                renderBoard();
+            }
+        }
+        
+        // 检查瓷砖是否相邻
+        function isAdjacent(row1, col1, row2, col2) {
+            return (
+                (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                (Math.abs(col1 - col2) === 1 && row1 === row2)
+            );
+        }
+        
+        // 交换瓷砖
+        function swapTiles(row1, col1, row2, col2) {
+            if (gameState.animating) return;
+            gameState.animating = true;
+            
+            // 视觉上交换
+            const tile1 = document.querySelector(`[data-row="${row1}"][data-col="${col1}"]`);
+            const tile2 = document.querySelector(`[data-row="${row2}"][data-col="${col2}"]`);
+            
+            // 记录原始位置
+            const tile1Rect = tile1.getBoundingClientRect();
+            const tile2Rect = tile2.getBoundingClientRect();
+            
+            // 计算位移
+            const deltaX = tile2Rect.left - tile1Rect.left;
+            const deltaY = tile2Rect.top - tile1Rect.top;
+            
+            // 应用动画
+            tile1.style.zIndex = "10";
+            tile2.style.zIndex = "10";
+            tile1.style.transition = `transform 0.3s ease`;
+            tile2.style.transition = `transform 0.3s ease`;
+            tile1.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            tile2.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
+            
+            // 实际交换数据
+            const temp = gameState.board[row1][col1];
+            gameState.board[row1][col1] = gameState.board[row2][col2];
+            gameState.board[row2][col2] = temp;
+            
+            // 同步可视状态
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            
+            // 动画完成后检查匹配
+            setTimeout(() => {
+                // 检查交换后是否有匹配
+                const matches = findMatches();
+                
+                if (matches.length > 0) {
+                    // 增加步数
+                    gameState.moves++;
+                    movesElement.textContent = gameState.moves;
+                    
+                    // 有匹配，移除匹配的瓷砖并更新得分
+                    removeMatchesWithAnimation(matches);
+                } else {
+                    // 没有匹配，交换回来
+                    const temp = gameState.board[row1][col1];
+                    gameState.board[row1][col1] = gameState.board[row2][col2];
+                    gameState.board[row2][col2] = temp;
+                    
+                    // 同步可视状态
+                    gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                    
+                    // 重新应用动画（交换回来）
+                    tile1.style.transform = "";
+                    tile2.style.transform = "";
+                    
+                    setTimeout(() => {
+                        renderBoard();
+                        gameState.animating = false;
+                    }, 300);
+                }
+            }, 300);
+        }
+        
+        // 查找匹配
+        function findMatches() {
+            const matches = [];
+            
+            // 检查水平匹配
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols - 2; col++) {
+                    const type = gameState.board[row][col];
+                    if (!type) continue;
+                    
+                    let matchLength = 1;
+                    let nextCol = col + 1;
+                    
+                    while (nextCol < config.cols && gameState.board[row][nextCol] === type) {
+                        matchLength++;
+                        nextCol++;
+                    }
+                    
+                    if (matchLength >= config.minMatch) {
+                        const match = {
+                            type: 'horizontal',
+                            row: row,
+                            col: col,
+                            length: matchLength,
+                            positions: []
+                        };
+                        
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({row: row, col: col + i});
+                        }
+                        
+                        matches.push(match);
+                    }
+                }
+            }
+            
+            // 检查垂直匹配
+            for (let col = 0; col < config.cols; col++) {
+                for (let row = 0; row < config.rows - 2; row++) {
+                    const type = gameState.board[row][col];
+                    if (!type) continue;
+                    
+                    let matchLength = 1;
+                    let nextRow = row + 1;
+                    
+                    while (nextRow < config.rows && gameState.board[nextRow][col] === type) {
+                        matchLength++;
+                        nextRow++;
+                    }
+                    
+                    if (matchLength >= config.minMatch) {
+                        const match = {
+                            type: 'vertical',
+                            row: row,
+                            col: col,
+                            length: matchLength,
+                            positions: []
+                        };
+                        
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({row: row + i, col: col});
+                        }
+                        
+                        matches.push(match);
+                    }
+                }
+            }
+            
+            return matches;
+        }
+        
+        // 带动画效果移除匹配的瓷砖
+        function removeMatchesWithAnimation(matches) {
+            let totalRemoved = 0;
+            const tilesToRemove = new Set();
+            
+            // 收集所有要移除的位置
+            matches.forEach(match => {
+                match.positions.forEach(pos => {
+                    const key = `${pos.row}-${pos.col}`;
+                    if (!tilesToRemove.has(key)) {
+                        tilesToRemove.add(key);
+                        totalRemoved++;
+                    }
+                });
+            });
+            
+            // 更新得分
+            const points = totalRemoved * 10;
+            gameState.score += points;
+            scoreElement.textContent = gameState.score;
+            
+            // 应用移除动画
+            tilesToRemove.forEach(key => {
+                const [row, col] = key.split('-').map(Number);
+                const tile = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (tile) {
+                    tile.classList.add('removing');
+                }
+            });
+            
+            // 标记棋盘上要移除的位置
+            tilesToRemove.forEach(key => {
+                const [row, col] = key.split('-').map(Number);
+                gameState.board[row][col] = null;
+            });
+            
+            // 等待移除动画完成
+            setTimeout(() => {
+                // 下落瓷砖并填充新瓷砖
+                dropTilesWithAnimation();
+            }, config.animationDuration);
+        }
+        
+        // 带动画效果下落瓷砖
+        function dropTilesWithAnimation() {
+            // 计算每列需要下落的瓷砖和新增的瓷砖
+            const columnsToProcess = [];
+            
+            for (let col = 0; col < config.cols; col++) {
+                const colInfo = {
+                    col: col,
+                    drops: [], // 需要下落的瓷砖 {fromRow, toRow, type}
+                    newTiles: []  // 新生成的瓷砖 {row, type}
+                };
+                
+                // 从底部向上遍历，标记空位和需要下落的瓷砖
+                let emptySpaces = 0;
+                for (let row = config.rows - 1; row >= 0; row--) {
+                    if (gameState.board[row][col] === null) {
+                        emptySpaces++;
+                    } else if (emptySpaces > 0) {
+                        // 这个瓷砖需要下落
+                        colInfo.drops.push({
+                            fromRow: row,
+                            toRow: row + emptySpaces,
+                            type: gameState.board[row][col]
+                        });
+                        
+                        // 更新游戏板
+                        gameState.board[row + emptySpaces][col] = gameState.board[row][col];
+                        gameState.board[row][col] = null;
+                    }
+                }
+                
+                // 填充顶部的空位
+                for (let row = 0; row < config.rows; row++) {
+                    if (gameState.board[row][col] === null) {
+                        const type = getRandomTileType();
+                        colInfo.newTiles.push({
+                            row: row,
+                            type: type
+                        });
+                        gameState.board[row][col] = type;
+                    } else {
+                        break; // 已经没有空位了
+                    }
+                }
+                
+                columnsToProcess.push(colInfo);
+            }
+            
+            // 更新可视游戏板，但暂时不更新将要下落和新增的瓷砖
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            
+            // 对于将要下落的瓷砖，在可视板上恢复原位置
+            columnsToProcess.forEach(colInfo => {
+                colInfo.drops.forEach(drop => {
+                    gameState.visualBoard[drop.fromRow][colInfo.col] = drop.type;
+                    gameState.visualBoard[drop.toRow][colInfo.col] = null;
+                });
+                
+                colInfo.newTiles.forEach(newTile => {
+                    gameState.visualBoard[newTile.row][colInfo.col] = null;
+                });
+            });
+            
+            // 渲染中间状态
+            renderBoard();
+            
+            // 应用下落动画
+            setTimeout(() => {
+                // 对每列应用下落动画
+                columnsToProcess.forEach(colInfo => {
+                    // 应用下落动画
+                    colInfo.drops.forEach(drop => {
+                        const tile = document.querySelector(`[data-row="${drop.fromRow}"][data-col="${colInfo.col}"]`);
+                        if (tile) {
+                            tile.classList.add('dropping');
+                            // 计算下落距离
+                            const distance = (drop.toRow - drop.fromRow) * tile.offsetHeight;
+                            tile.style.transform = `translateY(${distance}px)`;
+                        }
+                    });
+                });
+                
+                // 下落动画完成后，渲染最终状态和应用新瓷砖动画
+                setTimeout(() => {
+                    // 更新可视游戏板为实际状态
+                    gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                    renderBoard();
+                    
+                    // 应用新瓷砖动画
+                    columnsToProcess.forEach(colInfo => {
+                        colInfo.newTiles.forEach(newTile => {
+                            const tile = document.querySelector(`[data-row="${newTile.row}"][data-col="${colInfo.col}"]`);
+                            if (tile) {
+                                tile.classList.add('new-tile');
+                            }
+                        });
+                    });
+                    
+                    // 新瓷砖动画完成后，检查是否有新的匹配
+                    setTimeout(() => {
+                        const newMatches = findMatches();
+                        if (newMatches.length > 0) {
+                            removeMatchesWithAnimation(newMatches);
+                        } else if (!hasPossibleMoves()) {
+                            // 如果没有可能的移动，重新洗牌
+                            shuffleBoard();
+                            gameState.animating = false;
+                        } else {
+                            gameState.animating = false;
+                        }
+                    }, config.animationDuration);
+                }, config.animationDuration);
+            }, 50); // 短暂延迟，确保DOM更新
+        }
+        
+        // 检查是否有可能的移动
+        function hasPossibleMoves() {
+            // 临时存储一份游戏板
+            const tempBoard = gameState.board.map(row => [...row]);
+            
+            // 检查每个可能的交换
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    // 检查向右交换
+                    if (col < config.cols - 1) {
+                        // 交换
+                        [gameState.board[row][col], gameState.board[row][col+1]] = 
+                        [gameState.board[row][col+1], gameState.board[row][col]];
+                        
+                        // 检查匹配
+                        const matches = findMatches();
+                        
+                        // 交换回来
+                        [gameState.board[row][col], gameState.board[row][col+1]] = 
+                        [gameState.board[row][col+1], gameState.board[row][col]];
+                        
+                        if (matches.length > 0) {
+                            // 恢复游戏板并返回true
+                            gameState.board = tempBoard.map(row => [...row]);
+                            return true;
+                        }
+                    }
+                    
+                    // 检查向下交换
+                    if (row < config.rows - 1) {
+                        // 交换
+                        [gameState.board[row][col], gameState.board[row+1][col]] = 
+                        [gameState.board[row+1][col], gameState.board[row][col]];
+                        
+                        // 检查匹配
+                        const matches = findMatches();
+                        
+                        // 交换回来
+                        [gameState.board[row][col], gameState.board[row+1][col]] = 
+                        [gameState.board[row+1][col], gameState.board[row][col]];
+                        
+                        if (matches.length > 0) {
+                            // 恢复游戏板并返回true
+                            gameState.board = tempBoard.map(row => [...row]);
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            // 恢复游戏板并返回false
+            gameState.board = tempBoard.map(row => [...row]);
+            return false;
+        }
+        
+        // 洗牌游戏板
+        function shuffleBoard() {
+            if (gameState.animating) return;
+            gameState.animating = true;
+            
+            const allTiles = [];
+            
+            // 收集所有瓷砖
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    allTiles.push(gameState.board[row][col]);
+                }
+            }
+            
+            // 打乱瓷砖
+            for (let i = allTiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allTiles[i], allTiles[j]] = [allTiles[j], allTiles[i]];
+            }
+            
+            // 保存旧棋盘状态
+            const oldBoard = JSON.parse(JSON.stringify(gameState.board));
+            
+            // 重新分配瓷砖
+            let index = 0;
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    gameState.board[row][col] = allTiles[index++];
+                }
+            }
+            
+            // 确保洗牌后有可行的移动
+            if (!hasPossibleMoves()) {
+                shuffleBoard();
+                return;
+            }
+            
+            // 添加洗牌动画
+            const tiles = document.querySelectorAll('.tile');
+            tiles.forEach(tile => {
+                tile.style.transition = "transform 0.5s ease, opacity 0.2s ease";
+                tile.style.transform = "scale(0)";
+                tile.style.opacity = "0";
+            });
+            
+            // 洗牌动画结束后显示新的游戏板
+            setTimeout(() => {
+                gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                renderBoard();
+                
+                // 显示新瓷砖的动画
+                setTimeout(() => {
+                    const newTiles = document.querySelectorAll('.tile');
+                    newTiles.forEach(tile => {
+                        tile.classList.add('new-tile');
+                    });
+                    
+                    setTimeout(() => {
+                        gameState.animating = false;
+                    }, config.animationDuration);
+                }, 50);
+            }, 500);
+        }
+        
+        // 开始计时器
+        function startTimer() {
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                timeElement.textContent = gameState.timeRemaining;
+                
+                if (gameState.timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            clearInterval(gameState.timer);
+            gameState.gameOver = true;
+            
+            setTimeout(() => {
+                alert(`游戏结束！\n你的得分：${gameState.score}\n使用的步数：${gameState.moves}`);
+            }, 100);
+        }
+        
+        // 提示功能
+        function showHint() {
+            if (gameState.gameOver || gameState.animating) return;
+            
+            clearTimeout(gameState.hintTimeout);
+            
+            // 检查每个可能的交换
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    // 检查向右交换
+                    if (col < config.cols - 1) {
+                        // 交换
+                        [gameState.board[row][col], gameState.board[row][col+1]] = 
+                        [gameState.board[row][col+1], gameState.board[row][col]];
+                        
+                        // 检查匹配
+                        const matches = findMatches();
+                        
+                        // 交换回来
+                        [gameState.board[row][col], gameState.board[row][col+1]] = 
+                        [gameState.board[row][col+1], gameState.board[row][col]];
+                        
+                        if (matches.length > 0) {
+                            // 找到了一个可能的移动，高亮显示
+                            const tile1 = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            const tile2 = document.querySelector(`[data-row="${row}"][data-col="${col+1}"]`);
+                            
+                            if (tile1 && tile2) {
+                                tile1.classList.add("selected");
+                                tile2.classList.add("selected");
+                                
+                                gameState.hintTimeout = setTimeout(() => {
+                                    tile1.classList.remove("selected");
+                                    tile2.classList.remove("selected");
+                                }, 1000);
+                            }
+                            
+                            return;
+                        }
+                    }
+                    
+                    // 检查向下交换
+                    if (row < config.rows - 1) {
+                        // 交换
+                        [gameState.board[row][col], gameState.board[row+1][col]] = 
+                        [gameState.board[row+1][col], gameState.board[row][col]];
+                        
+                        // 检查匹配
+                        const matches = findMatches();
+                        
+                        // 交换回来
+                        [gameState.board[row][col], gameState.board[row+1][col]] = 
+                        [gameState.board[row+1][col], gameState.board[row][col]];
+                        
+                        if (matches.length > 0) {
+                            // 找到了一个可能的移动，高亮显示
+                            const tile1 = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            const tile2 = document.querySelector(`[data-row="${row+1}"][data-col="${col}"]`);
+                            
+                            if (tile1 && tile2) {
+                                tile1.classList.add("selected");
+                                tile2.classList.add("selected");
+                                
+                                gameState.hintTimeout = setTimeout(() => {
+                                    tile1.classList.remove("selected");
+                                    tile2.classList.remove("selected");
+                                }, 1000);
+                            }
+                            
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 事件监听器
+        newGameButton.addEventListener("click", initGame);
+        hintButton.addEventListener("click", showHint);
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
