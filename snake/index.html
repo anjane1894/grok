@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>贪吃蛇 - 关卡版</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        #game-container {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        #gameCanvas {
+            border: 1px solid #000;
+            background-color: #333;
+        }
+        #info {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            z-index: 2;
+        }
+        #game-over h2 {
+            margin: 0;
+            color: #d32f2f;
+        }
+        #game-over p {
+            margin: 10px 0;
+            color: #555;
+        }
+        #background-svg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body>
+    <svg id="background-svg"></svg>
+    <div id="game-container">
+        <div id="info">得分: 0 | 关卡: 1</div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div id="game-over">
+            <h2>游戏结束!</h2>
+            <p>最终得分: <span id="final-score"></span></p>
+            <p>最终关卡: <span id="final-level"></span></p>
+            <p>按 R 键重新开始</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const infoDisplay = document.getElementById('info');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalLevelDisplay = document.getElementById('final-level');
+        const bgSvg = document.getElementById('background-svg');
+
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 15, y: 15 };
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let level = 1;
+        const maxLevel = 50;
+        let gameSpeed = 200; // 初始速度放慢到 200ms
+        let gameLoop;
+        let gameOver = false;
+
+        // 生成背景蛇图案
+        function generateBackground() {
+            const patternSize = 50;
+            const cols = Math.ceil(window.innerWidth / patternSize);
+            const rows = Math.ceil(window.innerHeight / patternSize);
+            let svgContent = '';
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    svgContent += `
+                        <path d="M${j * patternSize + 25},${i * patternSize + 10} 
+                                Q${j * patternSize + 40},${i * patternSize + 25} 
+                                ${j * patternSize + 25},${i * patternSize + 40} 
+                                Q${j * patternSize + 10},${i * patternSize + 25} 
+                                ${j * patternSize + 25},${i * patternSize + 10}" 
+                                fill="none" stroke="green" stroke-width="2"/>
+                    `;
+                }
+            }
+            bgSvg.innerHTML = svgContent;
+        }
+        generateBackground();
+
+        // 绘制游戏元素
+        function drawGame() {
+            if (!gameOver) {
+                const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+                snake.unshift(head);
+
+                if (head.x === food.x && head.y === food.y) {
+                    score += 1;
+                    if (score % 5 === 0 && level < maxLevel) {
+                        level += 1;
+                        // 每升一级减少 5ms，速度逐渐加快，最快到 50ms
+                        gameSpeed = Math.max(50, 200 - (level - 1) * 5);
+                        clearInterval(gameLoop);
+                        gameLoop = setInterval(drawGame, gameSpeed);
+                    }
+                    infoDisplay.textContent = `得分: ${score} | 关卡: ${level}`;
+                    generateFood();
+                } else {
+                    snake.pop();
+                }
+
+                if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || collision(head)) {
+                    gameOver = true;
+                    showGameOver();
+                    return;
+                }
+            }
+
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制蛇（绿色色块）
+            ctx.fillStyle = '#00FF00';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+
+            // 绘制食物（橙色色块）
+            ctx.fillStyle = '#FFA500';
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function collision(head) {
+            return snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y);
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+            if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+                generateFood();
+            }
+        }
+
+        function showGameOver() {
+            gameOverScreen.style.display = 'block';
+            finalScoreDisplay.textContent = score;
+            finalLevelDisplay.textContent = level;
+            clearInterval(gameLoop);
+        }
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }];
+            dx = 0;
+            dy = 0;
+            score = 0;
+            level = 1;
+            gameSpeed = 200; // 重置时恢复初始速度
+            infoDisplay.textContent = `得分: ${score} | 关卡: ${level}`;
+            gameOver = false;
+            gameOverScreen.style.display = 'none';
+            generateFood();
+            clearInterval(gameLoop);
+            gameLoop = setInterval(drawGame, gameSpeed);
+        }
+
+        document.addEventListener('keydown', e => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (dy === 0) { dx = 0; dy = -1; }
+                    break;
+                case 'ArrowDown':
+                    if (dy === 0) { dx = 0; dy = 1; }
+                    break;
+                case 'ArrowLeft':
+                    if (dx === 0) { dx = -1; dy = 0; }
+                    break;
+                case 'ArrowRight':
+                    if (dx === 0) { dx = 1; dy = 0; }
+                    break;
+                case 'r':
+                case 'R':
+                    if (gameOver) resetGame();
+                    break;
+            }
+        });
+
+        // 启动游戏
+        gameLoop = setInterval(drawGame, gameSpeed);
+    </script>
+</body>
+</html>
