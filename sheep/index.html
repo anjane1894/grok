@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>羊了个羊 - 消除游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .game-title {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-container, .time-container, .level-container {
+            text-align: center;
+        }
+        
+        .score-label, .time-label, .level-label {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .score, .time, .level {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            height: 600px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            border-radius: 10px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card.selected {
+            border: 3px solid #ffcc00;
+            transform: translateY(-5px);
+        }
+        
+        .card img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        
+        .holding-area {
+            width: 100%;
+            max-width: 500px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .holding-slot {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px dashed #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .holding-slot.filled {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toolbar {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tool-button {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tool-button:active {
+            transform: translateY(0);
+        }
+        
+        .tool-button.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .tool-cost {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .modal-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .modal-button {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 0 10px;
+        }
+        
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .difficulty-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .difficulty-button {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .difficulty-button.selected {
+            background: linear-gradient(135deg, #fd8a8a 0%, #ffc2c2 100%);
+            transform: scale(1.05);
+        }
+        
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .theme-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 3px solid transparent;
+        }
+        
+        .theme-option.selected {
+            border-color: #ffcc00;
+            transform: scale(1.1);
+        }
+        
+        .language-selector {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .language-button {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .language-button.selected {
+            background: linear-gradient(135deg, #fd8a8a 0%, #ffc2c2 100%);
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 500px) {
+            .card {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .card img {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .holding-slot {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .tool-button, .language-button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .header {
+                padding: 8px 15px;
+            }
+            
+            .game-container {
+                height: 500px;
+            }
+            
+            .game-title {
+                font-size: 24px;
+            }
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .pop {
+            animation: pop 0.3s ease;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+        
+        .shake {
+            animation: shake 0.5s ease;
+        }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.8);
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .card.hint {
+            animation: hint 1s infinite;
+            box-shadow: 0 0 15px #ffcc00;
+        }
+        
+        @keyframes hint {
+            0% { box-shadow: 0 0 5px #ffcc00; }
+            50% { box-shadow: 0 0 20px #ffcc00; }
+            100% { box-shadow: 0 0 5px #ffcc00; }
+        }
+        
+        .rules-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .rules-container h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .rules-container p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-title" id="game-title">羊了个羊</div>
+    
+    <div class="header">
+        <div class="level-container">
+            <div class="level-label" data-lang-key="level">关卡</div>
+            <div class="level">1</div>
+        </div>
+        <div class="score-container">
+            <div class="score-label" data-lang-key="score">分数</div>
+            <div class="score">0</div>
+        </div>
+        <div class="time-container">
+            <div class="time-label" data-lang-key="time">时间</div>
+            <div class="time">0:00</div>
+        </div>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar"></div>
+    </div>
+    
+    <div class="game-container" id="game-container"></div>
+    
+    <div class="holding-area" id="holding-area">
+        <div class="holding-slot" id="slot-1"></div>
+        <div class="holding-slot" id="slot-2"></div>
+        <div class="holding-slot" id="slot-3"></div>
+        <div class="holding-slot" id="slot-4"></div>
+        <div class="holding-slot" id="slot-5"></div>
+    </div>
+    
+    <div class="toolbar">
+        <div class="tool-item">
+            <button class="tool-button" id="shuffle-button" data-lang-key="shuffle">重排</button>
+            <span class="tool-cost" data-lang-key="shuffleCost">20 分</span>
+        </div>
+        <div class="tool-item">
+            <button class="tool-button" id="undo-button" data-lang-key="undo">撤销</button>
+            <span class="tool-cost" data-lang-key="undoCost">10 分</span>
+        </div>
+        <div class="tool-item">
+            <button class="tool-button" id="hint-button" data-lang-key="hint">提示</button>
+            <span class="tool-cost" data-lang-key="hintCost">15 分</span>
+        </div>
+        <div class="tool-item">
+            <button class="tool-button" id="pause-button" data-lang-key="pause">暂停</button>
+            <span class="tool-cost" data-lang-key="free">免费</span>
+        </div>
+    </div>
+    
+    <div class="rules-container">
+        <h3 data-lang-key="rulesTitle">游戏规则</h3>
+        <p data-lang-key="rulesText">点击卡片将其放入暂存区，集齐三张相同卡片即可消除。使用工具需要消耗积分：重排 20 分，撤销 10 分，提示 15 分。清除所有卡片以获胜！</p>
+    </div>
+    
+    <div class="language-selector">
+        <button class="language-button selected" data-lang="zh-CN">简体中文</button>
+        <button class="language-button" data-lang="zh-TW">繁體中文</button>
+        <button class="language-button" data-lang="en">English</button>
+        <button class="language-button" data-lang="ko">한국어</button>
+        <button class="language-button" data-lang="ja">日本語</button>
+    </div>
+    
+    <div class="modal active" id="start-menu">
+        <div class="modal-content">
+            <h2 class="modal-title" data-lang-key="startTitle">羊了个羊</h2>
+            <p class="modal-text" data-lang-key="selectDifficulty">选择难度级别：</p>
+            <div class="difficulty-buttons">
+                <button class="difficulty-button selected" data-difficulty="easy" data-lang-key="easy">简单</button>
+                <button class="difficulty-button" data-difficulty="medium" data-lang-key="medium">中等</button>
+                <button class="difficulty-button" data-difficulty="hard" data-lang-key="hard">困难</button>
+                <button class="difficulty-button" data-difficulty="expert" data-lang-key="expert">专家</button>
+            </div>
+            <p class="modal-text" data-lang-key="selectTheme">选择主题：</p>
+            <div class="theme-selector">
+                <div class="theme-option selected" style="background-color: #a1c4fd;" data-theme="blue"></div>
+                <div class="theme-option" style="background-color: #ff9a9e;" data-theme="pink"></div>
+                <div class="theme-option" style="background-color: #a8edea;" data-theme="green"></div>
+                <div class="theme-option" style="background-color: #f6d365;" data-theme="yellow"></div>
+            </div>
+            <button class="modal-button" id="start-button" data-lang-key="startGame">开始游戏</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="pause-menu">
+        <div class="modal-content">
+            <h2 class="modal-title" data-lang-key="pauseTitle">游戏暂停</h2>
+            <p class="modal-text" data-lang-key="pauseText">休息一下吧！</p>
+            <button class="modal-button" id="resume-button" data-lang-key="resumeGame">继续游戏</button>
+            <button class="modal-button" id="restart-button" data-lang-key="restartGame">重新开始</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="end-menu">
+        <div class="modal-content">
+            <h2 class="modal-title" id="end-title" data-lang-key="endTitle">游戏结束</h2>
+            <p class="modal-text" id="end-message" data-lang-key="endMessage">你的得分：0</p>
+            <button class="modal-button" id="next-level-button" data-lang-key="nextLevel">下一关</button>
+            <button class="modal-button" id="retry-button" data-lang-key="retry">重试</button>
+            <button class="modal-button" id="back-menu-button" data-lang-key="backToMenu">返回菜单</button>
+        </div>
+    </div>
+    
+    <script>
+        let gameState = {
+            score: 0,
+            level: 1,
+            time: 0,
+            isPlaying: false,
+            difficulty: 'easy',
+            theme: 'blue',
+            cards: [],
+            holdingSlots: [null, null, null, null, null],
+            selectedCard: null,
+            matchedPairs: 0,
+            totalPairs: 0,
+            timerInterval: null,
+            moveHistory: [],
+            hintTimeout: null,
+            language: 'zh-CN'
+        };
+        
+        const translations = {
+            'zh-CN': {
+                gameTitle: '羊了个羊',
+                level: '关卡',
+                score: '分数',
+                time: '时间',
+                shuffle: '重排',
+                shuffleCost: '20 分',
+                undo: '撤销',
+                undoCost: '10 分',
+                hint: '提示',
+                hintCost: '15 分',
+                pause: '暂停',
+                free: '免费',
+                rulesTitle: '游戏规则',
+                rulesText: '点击卡片将其放入暂存区，集齐三张相同卡片即可消除。使用工具需要消耗积分：重排 20 分，撤销 10 分，提示 15 分。清除所有卡片以获胜！',
+                startTitle: '羊了个羊',
+                selectDifficulty: '选择难度级别：',
+                easy: '简单',
+                medium: '中等',
+                hard: '困难',
+                expert: '专家',
+                selectTheme: '选择主题：',
+                startGame: '开始游戏',
+                pauseTitle: '游戏暂停',
+                pauseText: '休息一下吧！',
+                resumeGame: '继续游戏',
+                restartGame: '重新开始',
+                endTitle: '游戏结束',
+                endMessage: '你的得分：{score}',
+                nextLevel: '下一关',
+                retry: '重试',
+                backToMenu: '返回菜单'
+            },
+            'zh-TW': {
+                gameTitle: '羊了個羊',
+                level: '關卡',
+                score: '分數',
+                time: '時間',
+                shuffle: '重排',
+                shuffleCost: '20 分',
+                undo: '撤銷',
+                undoCost: '10 分',
+                hint: '提示',
+                hintCost: '15 分',
+                pause: '暫停',
+                free: '免費',
+                rulesTitle: '遊戲規則',
+                rulesText: '點擊卡片將其放入暫存區，集齊三張相同卡片即可消除。使用工具需消耗積分：重排 20 分，撤銷 10 分，提示 15 分。清除所有卡片以獲勝！',
+                startTitle: '羊了個羊',
+                selectDifficulty: '選擇難度等級：',
+                easy: '簡單',
+                medium: '中等',
+                hard: '困難',
+                expert: '專家',
+                selectTheme: '選擇主題：',
+                startGame: '開始遊戲',
+                pauseTitle: '遊戲暫停',
+                pauseText: '休息一下吧！',
+                resumeGame: '繼續遊戲',
+                restartGame: '重新開始',
+                endTitle: '遊戲結束',
+                endMessage: '你的得分：{score}',
+                nextLevel: '下一關',
+                retry: '重試',
+                backToMenu: '返回菜單'
+            },
+            'en': {
+                gameTitle: 'Sheep a Sheep',
+                level: 'Level',
+                score: 'Score',
+                time: 'Time',
+                shuffle: 'Shuffle',
+                shuffleCost: '20 Pts',
+                undo: 'Undo',
+                undoCost: '10 Pts',
+                hint: 'Hint',
+                hintCost: '15 Pts',
+                pause: 'Pause',
+                free: 'Free',
+                rulesTitle: 'Game Rules',
+                rulesText: 'Click a card to move it to the holding area. Collect three identical cards to eliminate them. Using tools costs points: Shuffle 20 pts, Undo 10 pts, Hint 15 pts. Clear all cards to win!',
+                startTitle: 'Sheep a Sheep',
+                selectDifficulty: 'Select Difficulty:',
+                easy: 'Easy',
+                medium: 'Medium',
+                hard: 'Hard',
+                expert: 'Expert',
+                selectTheme: 'Select Theme:',
+                startGame: 'Start Game',
+                pauseTitle: 'Game Paused',
+                pauseText: 'Take a break!',
+                resumeGame: 'Resume Game',
+                restartGame: 'Restart',
+                endTitle: 'Game Over',
+                endMessage: 'Your Score: {score}',
+                nextLevel: 'Next Level',
+                retry: 'Retry',
+                backToMenu: 'Back to Menu'
+            },
+            'ko': {
+                gameTitle: '양을 모아라',
+                level: '레벨',
+                score: '점수',
+                time: '시간',
+                shuffle: '섞기',
+                shuffleCost: '20 점',
+                undo: '취소',
+                undoCost: '10 점',
+                hint: '힌트',
+                hintCost: '15 점',
+                pause: '일시정지',
+                free: '무료',
+                rulesTitle: '게임 규칙',
+                rulesText: '카드를 클릭하여 보관 구역으로 이동시키세요. 동일한 카드 3장을 모으면 제거됩니다. 도구 사용 시 점수가 소모됩니다: 섞기 20점, 취소 10점, 힌트 15점. 모든 카드를 제거하면 승리!',
+                startTitle: '양을 모아라',
+                selectDifficulty: '난이도 선택:',
+                easy: '쉬움',
+                medium: '중간',
+                hard: '어려움',
+                expert: '전문가',
+                selectTheme: '테마 선택:',
+                startGame: '게임 시작',
+                pauseTitle: '게임 일시정지',
+                pauseText: '조금 쉬세요!',
+                resumeGame: '게임 계속',
+                restartGame: '다시 시작',
+                endTitle: '게임 종료',
+                endMessage: '당신의 점수: {score}',
+                nextLevel: '다음 레벨',
+                retry: '다시 시도',
+                backToMenu: '메뉴로 돌아가기'
+            },
+            'ja': {
+                gameTitle: '羊を揃えろ',
+                level: 'レベル',
+                score: 'スコア',
+                time: '時間',
+                shuffle: 'シャッフル',
+                shuffleCost: '20 ポイント',
+                undo: '元に戻す',
+                undoCost: '10 ポイント',
+                hint: 'ヒント',
+                hintCost: '15 ポイント',
+                pause: '一時停止',
+                free: '無料',
+                rulesTitle: 'ゲームルール',
+                rulesText: 'カードをクリックして保管エリアに移動させ、同じカードを3枚揃えると消えます。ツール使用にはポイントが必要です：シャッフル 20ポイント、元に戻す 10ポイント、ヒント 15ポイント。すべてのカードを消すと勝利！',
+                startTitle: '羊を揃えろ',
+                selectDifficulty: '難易度を選択：',
+                easy: '簡単',
+                medium: '中級',
+                hard: '難しい',
+                expert: 'エキスパート',
+                selectTheme: 'テーマを選択：',
+                startGame: 'ゲーム開始',
+                pauseTitle: 'ゲーム一時停止',
+                pauseText: '少し休憩してください！',
+                resumeGame: 'ゲーム再開',
+                restartGame: 'リスタート',
+                endTitle: 'ゲーム終了',
+                endMessage: 'あなたのスコア：{score}',
+                nextLevel: '次のレベル',
+                retry: 'リトライ',
+                backToMenu: 'メニューに戻る'
+            }
+        };
+        
+        const gameConfig = {
+            easy: { layers: 3, typesCount: 8, cardsPerType: 3 },
+            medium: { layers: 4, typesCount: 10, cardsPerType: 3 },
+            hard: { layers: 5, typesCount: 12, cardsPerType: 3 },
+            expert: { layers: 6, typesCount: 15, cardsPerType: 3 }
+        };
+        
+        const themeConfig = {
+            blue: {
+                background: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+                cardColor: '#ffffff',
+                buttonGradient: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)'
+            },
+            pink: {
+                background: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)',
+                cardColor: '#ffffff',
+                buttonGradient: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)'
+            },
+            green: {
+                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                cardColor: '#ffffff',
+                buttonGradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            },
+            yellow: {
+                background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+                cardColor: '#ffffff',
+                buttonGradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)'
+            }
+        };
+        
+        const icons = [
+            '🐑', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻',
+            '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵',
+            '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇'
+        ];
+        
+        const gameContainer = document.getElementById('game-container');
+        const holdingArea = document.getElementById('holding-area');
+        const scoreElement = document.querySelector('.score');
+        const timeElement = document.querySelector('.time');
+        const levelElement = document.querySelector('.level');
+        const progressBar = document.querySelector('.progress-bar');
+        
+        const shuffleButton = document.getElementById('shuffle-button');
+        const undoButton = document.getElementById('undo-button');
+        const hintButton = document.getElementById('hint-button');
+        const pauseButton = document.getElementById('pause-button');
+        const startButton = document.getElementById('start-button');
+        const resumeButton = document.getElementById('resume-button');
+        const restartButton = document.getElementById('restart-button');
+        const nextLevelButton = document.getElementById('next-level-button');
+        const retryButton = document.getElementById('retry-button');
+        const backMenuButton = document.getElementById('back-menu-button');
+        
+        const startMenu = document.getElementById('start-menu');
+        const pauseMenu = document.getElementById('pause-menu');
+        const endMenu = document.getElementById('end-menu');
+        
+        const difficultyButtons = document.querySelectorAll('.difficulty-button');
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const languageButtons = document.querySelectorAll('.language-button');
+        
+        function initGame() {
+            if (!startButton) {
+                console.error('startButton not found');
+                return;
+            }
+            
+            difficultyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    difficultyButtons.forEach(btn => btn.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameState.difficulty = this.dataset.difficulty;
+                });
+            });
+            
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    themeOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameState.theme = this.dataset.theme;
+                    applyTheme();
+                });
+            });
+            
+            languageButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    languageButtons.forEach(btn => btn.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameState.language = this.dataset.lang;
+                    updateLanguage();
+                });
+            });
+            
+            applyTheme();
+            updateLanguage();
+            
+            startButton.addEventListener('click', startGame);
+            pauseButton.addEventListener('click', pauseGame);
+            resumeButton.addEventListener('click', resumeGame);
+            restartButton.addEventListener('click', restartGame);
+            nextLevelButton.addEventListener('click', nextLevel);
+            retryButton.addEventListener('click', restartLevel);
+            backMenuButton.addEventListener('click', backToMenu);
+            shuffleButton.addEventListener('click', shuffleCards);
+            undoButton.addEventListener('click', undoMove);
+            hintButton.addEventListener('click', showHint);
+            
+            toggleGameButtons(true);
+        }
+        
+        function applyTheme() {
+            const theme = themeConfig[gameState.theme];
+            document.body.style.background = theme.background;
+            
+            const toolButtons = document.querySelectorAll('.tool-button');
+            toolButtons.forEach(button => {
+                if (!button.classList.contains('disabled')) {
+                    button.style.background = theme.buttonGradient;
+                }
+            });
+            
+            document.querySelector('.progress-bar').style.background = theme.buttonGradient;
+        }
+        
+        function updateLanguage() {
+            const lang = translations[gameState.language];
+            document.querySelectorAll('[data-lang-key]').forEach(element => {
+                const key = element.dataset.langKey;
+                if (key === 'endMessage') {
+                    element.textContent = lang[key].replace('{score}', gameState.score);
+                } else {
+                    element.textContent = lang[key];
+                }
+            });
+            document.getElementById('game-title').textContent = lang.gameTitle;
+        }
+        
+        function startGame() {
+            console.log('Start game triggered');
+            
+            gameState.isPlaying = true;
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.time = 0;
+            gameState.moveHistory = [];
+            
+            updateScoreDisplay();
+            updateLevelDisplay();
+            updateLanguage();
+            
+            if (startMenu) {
+                startMenu.classList.remove('active');
+                console.log('Start menu classes after remove:', startMenu.classList);
+            } else {
+                console.error('startMenu element not found');
+            }
+            
+            createLevel();
+            startTimer();
+            toggleGameButtons(false);
+        }
+        
+        function createLevel() {
+            gameContainer.innerHTML = '';
+            gameState.cards = [];
+            gameState.selectedCard = null;
+            gameState.matchedPairs = 0;
+            
+            for (let i = 0; i < gameState.holdingSlots.length; i++) {
+                gameState.holdingSlots[i] = null;
+                const slot = document.getElementById(`slot-${i+1}`);
+                slot.innerHTML = '';
+                slot.classList.remove('filled');
+            }
+            
+            const config = gameConfig[gameState.difficulty];
+            let layers = config.layers + Math.floor((gameState.level - 1) / 2);
+            const typesCount = Math.min(config.typesCount + Math.floor((gameState.level - 1) / 3), icons.length);
+            
+            let cardTypes = [];
+            for (let i = 0; i < typesCount; i++) {
+                for (let j = 0; j < config.cardsPerType; j++) {
+                    cardTypes.push(i);
+                }
+            }
+            
+            cardTypes = shuffleArray(cardTypes);
+            gameState.totalPairs = Math.floor(cardTypes.length / 3);
+            
+            const containerWidth = gameContainer.offsetWidth;
+            const containerHeight = gameContainer.offsetHeight;
+            const cardWidth = 60;
+            const cardHeight = 60;
+            
+            const layerWidth = containerWidth - cardWidth;
+            const layerHeight = containerHeight - cardHeight;
+            
+            let cardIndex = 0;
+            for (let layer = 0; layer < layers; layer++) {
+                const cardsInLayer = Math.min(cardTypes.length - cardIndex, Math.max(3, Math.floor(12 * (1 - layer / layers))));
+                for (let i = 0; i < cardsInLayer; i++) {
+                    if (cardIndex >= cardTypes.length) break;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    const minX = 10 + (layerWidth * 0.1 * layer);
+                    const maxX = layerWidth - (layerWidth * 0.1 * layer);
+                    const minY = 10 + (layerHeight * 0.1 * layer);
+                    const maxY = layerHeight - (layerHeight * 0.1 * layer);
+                    
+                    let validPosition = false;
+                    let x, y;
+                    
+                    for (let attempt = 0; attempt < 100; attempt++) {
+                        x = Math.floor(Math.random() * (maxX - minX)) + minX;
+                        y = Math.floor(Math.random() * (maxY - minY)) + minY;
+                        
+                        validPosition = true;
+                        
+                        for (const existingCard of gameState.cards) {
+                            const existingX = parseInt(existingCard.style.left);
+                            const existingY = parseInt(existingCard.style.top);
+                            
+                            if (Math.abs(existingX - x) < cardWidth * 0.5 && Math.abs(existingY - y) < cardHeight * 0.5) {
+                                validPosition = false;
+                                break;
+                            }
+                        }
+                        
+                        if (validPosition) break;
+                    }
+                    
+                    card.style.left = `${x}px`;
+                    card.style.top = `${y}px`;
+                    card.style.zIndex = layer + 1;
+                    
+                    const cardType = cardTypes[cardIndex];
+                    card.dataset.type = cardType;
+                    card.innerHTML = icons[cardType];
+                    
+                    card.addEventListener('click', () => onCardClick(card));
+                    
+                    gameContainer.appendChild(card);
+                    gameState.cards.push(card);
+                    cardIndex++;
+                }
+            }
+            
+            progressBar.style.width = '0%';
+            updateCardClickability();
+        }
+        
+        function onCardClick(card) {
+            if (!gameState.isPlaying) return;
+
+            if (card.classList.contains('unclickable')) {
+                card.classList.add('shake');
+                setTimeout(() => {
+                    card.classList.remove('shake');
+                }, 500);
+                return;
+            }
+
+            if (gameState.hintTimeout) {
+                clearTimeout(gameState.hintTimeout);
+                document.querySelectorAll('.card.hint').forEach(card => {
+                    card.classList.remove('hint');
+                });
+            }
+
+            if (gameState.selectedCard) {
+                gameState.selectedCard.classList.remove('selected');
+            }
+
+            gameState.selectedCard = card;
+            card.classList.add('selected');
+            card.classList.add('pop');
+            setTimeout(() => {
+                card.classList.remove('pop');
+            }, 300);
+
+            const cardType = card.dataset.type;
+            let emptySlotIndex = -1;
+            for (let i = 0; i < gameState.holdingSlots.length; i++) {
+                if (!gameState.holdingSlots[i]) {
+                    emptySlotIndex = i;
+                    break;
+                }
+            }
+
+            if (emptySlotIndex !== -1) {
+                const historyEntry = {
+                    type: 'hold',
+                    card: card.cloneNode(true),
+                    slotIndex: emptySlotIndex
+                };
+                gameState.moveHistory.push(historyEntry);
+
+                const slot = document.getElementById(`slot-${emptySlotIndex + 1}`);
+                const cardClone = card.cloneNode(true);
+                cardClone.style.position = 'static';
+                cardClone.style.transform = 'none';
+                cardClone.classList.remove('selected');
+                cardClone.addEventListener('click', () => onSlotCardClick(emptySlotIndex));
+
+                slot.appendChild(cardClone);
+                slot.classList.add('filled');
+                gameState.holdingSlots[emptySlotIndex] = cardClone;
+
+                card.classList.add('fade-out');
+                setTimeout(() => {
+                    card.remove();
+                    const cardIndex = gameState.cards.indexOf(card);
+                    if (cardIndex > -1) {
+                        gameState.cards.splice(cardIndex, 1);
+                    }
+                    updateCardClickability();
+
+                    const matches = [];
+                    gameState.holdingSlots.forEach((slotCard, index) => {
+                        if (slotCard && slotCard.dataset.type === cardType) {
+                            matches.push(index);
+                        }
+                    });
+
+                    if (matches.length >= 3) {
+                        const historyEntry = {
+                            type: 'match',
+                            slots: matches.slice(0, 3).map(i => ({
+                                index: i,
+                                card: gameState.holdingSlots[i].cloneNode(true)
+                            }))
+                        };
+                        gameState.moveHistory.push(historyEntry);
+
+                        matches.slice(0, 3).forEach(index => {
+                            const slot = document.getElementById(`slot-${index + 1}`);
+                            slot.classList.add('fade-out');
+                            setTimeout(() => {
+                                slot.innerHTML = '';
+                                slot.classList.remove('filled', 'fade-out');
+                                gameState.holdingSlots[index] = null;
+                            }, 500);
+                        });
+
+                        gameState.score += 10 * gameState.level;
+                        updateScoreDisplay();
+                        gameState.matchedPairs++;
+                        updateProgressBar();
+                    }
+
+                    checkGameCompletion();
+                }, 500);
+
+                gameState.selectedCard = null;
+            } else {
+                card.classList.remove('selected');
+                card.classList.add('shake');
+                setTimeout(() => {
+                    card.classList.remove('shake');
+                }, 500);
+                gameState.selectedCard = null;
+            }
+        }
+        
+        function onSlotCardClick(slotIndex) {
+            if (!gameState.isPlaying) return;
+            
+            const slot = document.getElementById(`slot-${slotIndex+1}`);
+            const card = gameState.holdingSlots[slotIndex];
+            
+            if (!card) return;
+            
+            const historyEntry = {
+                type: 'return',
+                slotIndex: slotIndex,
+                card: card.cloneNode(true)
+            };
+            gameState.moveHistory.push(historyEntry);
+            
+            const cardType = card.dataset.type;
+            const newCard = document.createElement('div');
+            newCard.className = 'card';
+            newCard.dataset.type = cardType;
+            newCard.innerHTML = icons[cardType];
+            
+            const containerWidth = gameContainer.offsetWidth;
+            const containerHeight = gameContainer.offsetHeight;
+            const x = Math.floor(Math.random() * (containerWidth - 60));
+            const y = Math.floor(containerHeight * 0.7 + Math.random() * (containerHeight * 0.3 - 60));
+            
+            newCard.style.left = `${x}px`;
+            newCard.style.top = `${y}px`;
+            newCard.style.zIndex = 10;
+            
+            newCard.addEventListener('click', () => onCardClick(newCard));
+            
+            slot.innerHTML = '';
+            slot.classList.remove('filled');
+            gameState.holdingSlots[slotIndex] = null;
+            
+            gameContainer.appendChild(newCard);
+            gameState.cards.push(newCard);
+            
+            updateCardClickability();
+        }
+        
+        function updateCardClickability() {
+            for (const card of gameState.cards) {
+                const cardZ = parseInt(card.style.zIndex);
+                const cardLeft = parseInt(card.style.left);
+                const cardTop = parseInt(card.style.top);
+                const cardWidth = 60;
+                const cardHeight = 60;
+                
+                let isClickable = true;
+                
+                for (const otherCard of gameState.cards) {
+                    if (card === otherCard) continue;
+                    
+                    const otherZ = parseInt(otherCard.style.zIndex);
+                    const otherLeft = parseInt(otherCard.style.left);
+                    const otherTop = parseInt(otherCard.style.top);
+                    
+                    if (otherZ > cardZ) {
+                        const overlapX = Math.max(0, Math.min(cardLeft + cardWidth, otherLeft + cardWidth) - Math.max(cardLeft, otherLeft));
+                        const overlapY = Math.max(0, Math.min(cardTop + cardHeight, otherTop + cardHeight) - Math.max(cardTop, otherTop));
+                        
+                        if (overlapX * overlapY > (cardWidth * cardHeight * 0.5)) {
+                            isClickable = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (isClickable) {
+                    card.classList.remove('unclickable');
+                } else {
+                    card.classList.add('unclickable');
+                }
+            }
+        }
+        
+        function checkGameCompletion() {
+            let clickableCardsExist = false;
+            for (const card of gameState.cards) {
+                if (!card.classList.contains('unclickable')) {
+                    clickableCardsExist = true;
+                    break;
+                }
+            }
+            
+            if (!clickableCardsExist) {
+                stopTimer();
+                gameState.isPlaying = false;
+                
+                if (gameState.cards.length === 0) {
+                    showEndMenu(true);
+                } else {
+                    showEndMenu(false);
+                }
+            }
+        }
+        
+        function showEndMenu(isWin) {
+            const endTitle = document.getElementById('end-title');
+            const endMessage = document.getElementById('end-message');
+            const nextLevelButton = document.getElementById('next-level-button');
+            const lang = translations[gameState.language];
+            
+            if (isWin) {
+                endTitle.textContent = lang.congrats || '恭喜过关！';
+                endMessage.textContent = lang.endMessage.replace('{score}', gameState.score);
+                nextLevelButton.style.display = 'inline-block';
+            } else {
+                endTitle.textContent = lang.gameOver || '游戏失败';
+                endMessage.textContent = lang.endMessage.replace('{score}', gameState.score);
+                nextLevelButton.style.display = 'none';
+            }
+            
+            endMenu.classList.add('active');
+            updateLanguage();
+        }
+        
+        function nextLevel() {
+            gameState.level++;
+            gameState.isPlaying = true;
+            endMenu.classList.remove('active');
+            updateLevelDisplay();
+            createLevel();
+            startTimer();
+        }
+        
+        function restartLevel() {
+            gameState.isPlaying = true;
+            endMenu.classList.remove('active');
+            createLevel();
+            startTimer();
+        }
+        
+        function backToMenu() {
+            endMenu.classList.remove('active');
+            startMenu.classList.add('active');
+            toggleGameButtons(true);
+            updateLanguage();
+        }
+        
+        function pauseGame() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.isPlaying = false;
+            stopTimer();
+            pauseMenu.classList.add('active');
+            updateLanguage();
+        }
+        
+        function resumeGame() {
+            gameState.isPlaying = true;
+            pauseMenu.classList.remove('active');
+            startTimer();
+        }
+        
+        function restartGame() {
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.isPlaying = true;
+            
+            updateScoreDisplay();
+            updateLevelDisplay();
+            
+            pauseMenu.classList.remove('active');
+            createLevel();
+            startTimer();
+        }
+        
+        function shuffleCards() {
+            if (!gameState.isPlaying || gameState.cards.length === 0) return;
+            
+            if (gameState.score < 20) {
+                shuffleButton.classList.add('shake');
+                setTimeout(() => shuffleButton.classList.remove('shake'), 500);
+                return;
+            }
+            
+            gameState.score -= 20;
+            updateScoreDisplay();
+            
+            const cardTypes = [];
+            for (const card of gameState.cards) {
+                cardTypes.push(card.dataset.type);
+            }
+            
+            gameContainer.innerHTML = '';
+            gameState.cards = [];
+            
+            const shuffledTypes = shuffleArray(cardTypes);
+            
+            const containerWidth = gameContainer.offsetWidth;
+            const containerHeight = gameContainer.offsetHeight;
+            const cardWidth = 60;
+            const cardHeight = 60;
+            
+            for (let i = 0; i < shuffledTypes.length; i++) {
+                const cardType = shuffledTypes[i];
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.type = cardType;
+                card.innerHTML = icons[cardType];
+                
+                let x = Math.floor(Math.random() * (containerWidth - cardWidth));
+                let y = Math.floor(Math.random() * (containerHeight - cardHeight));
+                
+                card.style.left = `${x}px`;
+                card.style.top = `${y}px`;
+                card.style.zIndex = Math.floor(Math.random() * 5) + 1;
+                
+                card.addEventListener('click', () => onCardClick(card));
+                
+                gameContainer.appendChild(card);
+                gameState.cards.push(card);
+            }
+            
+            updateCardClickability();
+        }
+        
+        function undoMove() {
+            if (!gameState.isPlaying || gameState.moveHistory.length === 0) return;
+            
+            if (gameState.score < 10) {
+                undoButton.classList.add('shake');
+                setTimeout(() => undoButton.classList.remove('shake'), 500);
+                return;
+            }
+            
+            gameState.score -= 10;
+            updateScoreDisplay();
+            
+            const lastMove = gameState.moveHistory.pop();
+            
+            if (lastMove.type === 'match') {
+                for (const slotInfo of lastMove.slots) {
+                    const slot = document.getElementById(`slot-${slotInfo.index+1}`);
+                    const cardClone = slotInfo.card.cloneNode(true);
+                    cardClone.addEventListener('click', () => onSlotCardClick(slotInfo.index));
+                    
+                    slot.appendChild(cardClone);
+                    slot.classList.add('filled');
+                    gameState.holdingSlots[slotInfo.index] = cardClone;
+                }
+                
+                gameState.matchedPairs--;
+                updateProgressBar();
+            } else if (lastMove.type === 'hold') {
+                const slot = document.getElementById(`slot-${lastMove.slotIndex+1}`);
+                slot.innerHTML = '';
+                slot.classList.remove('filled');
+                gameState.holdingSlots[lastMove.slotIndex] = null;
+                
+                const newCard = lastMove.card.cloneNode(true);
+                newCard.classList.remove('fade-out');
+                newCard.classList.remove('selected');
+                newCard.addEventListener('click', () => onCardClick(newCard));
+                
+                gameContainer.appendChild(newCard);
+                gameState.cards.push(newCard);
+            } else if (lastMove.type === 'return') {
+                let cardToRemove = null;
+                for (let i = gameState.cards.length - 1; i >= 0; i--) {
+                    if (gameState.cards[i].dataset.type === lastMove.card.dataset.type) {
+                        cardToRemove = gameState.cards[i];
+                        gameState.cards.splice(i, 1);
+                        break;
+                    }
+                }
+                
+                if (cardToRemove) {
+                    cardToRemove.remove();
+                }
+                
+                const slot = document.getElementById(`slot-${lastMove.slotIndex+1}`);
+                const cardClone = lastMove.card.cloneNode(true);
+                cardClone.addEventListener('click', () => onSlotCardClick(lastMove.slotIndex));
+                
+                slot.appendChild(cardClone);
+                slot.classList.add('filled');
+                gameState.holdingSlots[lastMove.slotIndex] = cardClone;
+            }
+            
+            updateCardClickability();
+        }
+        
+        function showHint() {
+            if (!gameState.isPlaying) return;
+            
+            if (gameState.score < 15) {
+                hintButton.classList.add('shake');
+                setTimeout(() => hintButton.classList.remove('shake'), 500);
+                return;
+            }
+            
+            gameState.score -= 15;
+            updateScoreDisplay();
+            
+            const clickableCards = [];
+            for (const card of gameState.cards) {
+                if (!card.classList.contains('unclickable')) {
+                    clickableCards.push(card);
+                }
+            }
+            
+            if (clickableCards.length > 0) {
+                let bestCard = null;
+                let bestMatchCount = 0;
+                
+                for (const card of clickableCards) {
+                    const cardType = card.dataset.type;
+                    let matchCount = 0;
+                    
+                    for (const slotCard of gameState.holdingSlots) {
+                        if (slotCard && slotCard.dataset.type === cardType) {
+                            matchCount++;
+                        }
+                    }
+                    
+                    if (matchCount > bestMatchCount) {
+                        bestMatchCount = matchCount;
+                        bestCard = card;
+                    }
+                }
+                
+                if (!bestCard) {
+                    bestCard = clickableCards[Math.floor(Math.random() * clickableCards.length)];
+                }
+                
+                bestCard.classList.add('hint');
+                
+                gameState.hintTimeout = setTimeout(() => {
+                    bestCard.classList.remove('hint');
+                    gameState.hintTimeout = null;
+                }, 3000);
+            }
+        }
+        
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.isPlaying) {
+                    gameState.time++;
+                    updateTimeDisplay();
+                }
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            clearInterval(gameState.timerInterval);
+        }
+        
+        function updateScoreDisplay() {
+            scoreElement.textContent = gameState.score;
+            updateLanguage(); // 更新得分显示时刷新语言
+        }
+        
+        function updateTimeDisplay() {
+            const minutes = Math.floor(gameState.time / 60);
+            const seconds = gameState.time % 60;
+            timeElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        
+        function updateLevelDisplay() {
+            levelElement.textContent = gameState.level;
+        }
+        
+        function updateProgressBar() {
+            const progress = (gameState.matchedPairs / gameState.totalPairs) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        function toggleGameButtons(disabled) {
+            const buttons = [shuffleButton, undoButton, hintButton, pauseButton];
+            buttons.forEach(button => {
+                if (disabled) {
+                    button.classList.add('disabled');
+                } else {
+                    button.classList.remove('disabled');
+                }
+            });
+        }
+        
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
