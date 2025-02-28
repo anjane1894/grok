@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开心消消乐 v2.0.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/food.png');
+            background-repeat: repeat;
+            background-size: 50px 50px;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        h1 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+            font-family: 'Pacifico', cursive;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #4a90e2, #ff6b6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .language-selector {
+            margin: 10px 0;
+        }
+        
+        .language-btn {
+            margin: 0 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .language-btn.active {
+            background-color: #4a90e2;
+            color: white;
+        }
+        
+        .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score, .moves, .time, .level, .combo {
+            text-align: center;
+            margin: 5px 10px;
+        }
+        
+        .level { color: #e67e22; font-weight: bold; }
+        .combo { color: #e74c3c; font-weight: bold; }
+        
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            grid-gap: 4px;
+            max-width: 500px;
+            width: 100%;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            aspect-ratio: 1;
+            min-height: 0;
+        }
+        
+        .tile {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
+            font-size: 24px;
+            user-select: none;
+            position: relative;
+            color: #fff;
+            background-color: #ddd;
+        }
+        
+        .tile.bomb {
+            font-size: 32px;
+            animation: bomb-sparkle 1s infinite alternate;
+            background: radial-gradient(circle, rgba(255, 255, 0, 0.8), rgba(255, 165, 0, 0.5));
+            z-index: 100; /* 层级置顶 */
+        }
+        
+        .tile.bomb .fruit {
+            animation: fruit-breathe 1.5s infinite;
+        }
+        
+        @keyframes bomb-sparkle {
+            0% { box-shadow: 0 0 5px #fff, 0 0 10px #ff0, 0 0 15px #ff0; }
+            100% { box-shadow: 0 0 10px #fff, 0 0 20px #ff0, 0 0 30px #ff0; }
+        }
+        
+        @keyframes fruit-breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .tile:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px gold;
+        }
+        
+        .removing {
+            animation: remove-animation 2s ease-out; /* 延长至 2 秒 */
+        }
+        
+        @keyframes remove-animation {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(10deg); opacity: 0.7; } /* 放大并轻微旋转 */
+            100% { transform: scale(0) rotate(20deg); opacity: 0; } /* 缩小消失 */
+        }
+        
+        .dropping {
+            animation: drop-animation 0.5s ease-in;
+        }
+        
+        .new-tile {
+            animation: new-tile-animation 0.5s ease-out;
+        }
+        
+        @keyframes drop-animation {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        
+        @keyframes new-tile-animation {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        
+        .score-popup {
+            position: absolute;
+            color: gold;
+            font-weight: bold;
+            font-size: 24px;
+            z-index: 100;
+            text-shadow: 0 0 3px black;
+            pointer-events: none;
+            animation: score-animation 1s ease-out forwards;
+        }
+        
+        @keyframes score-animation {
+            0% { transform: scale(0.5); opacity: 0; }
+            10% { transform: scale(1.2); opacity: 1; }
+            80% { transform: translateY(-20px) scale(1); opacity: 1; }
+            100% { transform: translateY(-30px) scale(1); opacity: 0; }
+        }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .level-up {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: gold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .level-up.show {
+            opacity: 1;
+        }
+        
+        .rules {
+            margin-top: 20px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .game-over-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .game-over-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-over-content p {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .game-over-content button {
+            margin-top: 15px;
+            background-color: #ff6b6b;
+        }
+        
+        .game-over-content button:hover {
+            background-color: #e55a5a;
+        }
+        
+        @media (max-width: 500px) {
+            #game-board { grid-gap: 2px; padding: 5px; }
+            .tile { font-size: 18px; }
+            .tile.bomb { font-size: 24px; }
+            .game-info { font-size: 14px; }
+            .score-popup { font-size: 18px; }
+            .rules { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="game-title">开心消消乐 v2.0.0</h1>
+        <div class="language-selector">
+            <button class="language-btn active" data-lang="zh-CN">简体中文</button>
+            <button class="language-btn" data-lang="zh-TW">繁體中文</button>
+            <button class="language-btn" data-lang="en">English</button>
+            <button class="language-btn" data-lang="ko">한국어</button>
+            <button class="language-btn" data-lang="ja">日本語</button>
+        </div>
+    </header>
+    
+    <div class="game-info">
+        <div class="level" id="level-display">关卡: <span id="level">1</span>/100</div>
+        <div class="score" id="score-display">得分: <span id="score">0</span></div>
+        <div class="moves" id="moves-display">步数: <span id="moves">0</span></div>
+        <div class="time" id="time-display">时间: <span id="time">60</span>s</div>
+        <div class="combo" id="combo-display">连击: <span id="combo">0</span>x</div>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar" id="level-progress"></div>
+    </div>
+    
+    <div id="game-board"></div>
+    
+    <div class="controls">
+        <button id="new-game" class="control-btn">新游戏</button>
+        <button id="hint" class="control-btn">提示</button>
+    </div>
+    
+    <div class="rules">
+        规则：交换相邻水果，3个或以上相同水果连成一线即可消除。4个以上生成炸弹，得分达标升级，时间耗尽游戏结束。
+    </div>
+    
+    <div class="level-up" id="level-up-display">
+        <div id="level-up-text">升级到第 2 关！</div>
+    </div>
+    
+    <div class="game-over-modal" id="game-over-modal">
+        <div class="game-over-content">
+            <p id="game-over-text"></p>
+            <p id="game-over-score"></p>
+            <p id="game-over-moves"></p>
+            <p>请点击下方按钮重新开始！</p>
+            <button onclick="initGame(); document.getElementById('game-over-modal').classList.remove('show');">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        const translations = {
+            'zh-CN': {
+                title: '开心消消乐 v2.0.0',
+                level: '关卡',
+                score: '得分',
+                moves: '步数',
+                time: '时间',
+                combo: '连击',
+                newGame: '新游戏',
+                hint: '提示',
+                gameOver: '游戏结束！',
+                yourScore: '你的得分',
+                usedMoves: '使用的步数',
+                levelUp: '升级到第 {level} 关！'
+            },
+            'zh-TW': {
+                title: '開心消消樂 v2.0.0',
+                level: '關卡',
+                score: '得分',
+                moves: '步數',
+                time: '時間',
+                combo: '連擊',
+                newGame: '新遊戲',
+                hint: '提示',
+                gameOver: '遊戲結束！',
+                yourScore: '你的得分',
+                usedMoves: '使用的步數',
+                levelUp: '升級到第 {level} 關！'
+            },
+            'en': {
+                title: 'Happy Match-3 v2.0.0',
+                level: 'Level',
+                score: 'Score',
+                moves: 'Moves',
+                time: 'Time',
+                combo: 'Combo',
+                newGame: 'New Game',
+                hint: 'Hint',
+                gameOver: 'Game Over!',
+                yourScore: 'Your Score',
+                usedMoves: 'Moves Used',
+                levelUp: 'Level Up to {level}!'
+            },
+            'ko': {
+                title: '해피 매치-3 v2.0.0',
+                level: '레벨',
+                score: '점수',
+                moves: '이동',
+                time: '시간',
+                combo: '콤보',
+                newGame: '새 게임',
+                hint: '힌트',
+                gameOver: '게임 오버!',
+                yourScore: '당신의 점수',
+                usedMoves: '사용된 이동',
+                levelUp: '레벨 {level} 업!'
+            },
+            'ja': {
+                title: 'ハッピーマッチ３ v2.0.0',
+                level: 'レベル',
+                score: 'スコア',
+                moves: '手数',
+                time: '時間',
+                combo: 'コンボ',
+                newGame: '新しいゲーム',
+                hint: 'ヒント',
+                gameOver: 'ゲームオーバー！',
+                yourScore: 'あなたのスコア',
+                usedMoves: '使用した手数',
+                levelUp: 'レベル {level} にアップ！'
+            }
+        };
+        
+        let currentLang = 'zh-CN';
+        
+        const config = {
+            rows: 8,
+            cols: 8,
+            types: ["🍎", "🍊", "🍋", "🍇", "🍉", "🍓"],
+            minMatch: 3,
+            bombThreshold: 4,
+            timeLimit: 60,
+            animationDuration: 500,
+            baseScorePerTile: 10,
+            comboMultiplier: 0.5,
+            maxLevel: 100,
+            scoreToLevelUp: 1000
+        };
+        
+        let gameState = {
+            board: [],
+            visualBoard: [],
+            score: 0,
+            totalScore: 0,
+            levelScore: 0,
+            level: 1,
+            moves: 0,
+            selected: null,
+            timeRemaining: config.timeLimit,
+            timer: null,
+            gameOver: false,
+            animating: false,
+            combo: 0,
+            comboTimeout: null,
+            nextLevelScore: config.scoreToLevelUp
+        };
+        
+        let boardElement = document.getElementById("game-board");
+        let scoreElement = document.getElementById("score");
+        let movesElement = document.getElementById("moves");
+        let timeElement = document.getElementById("time");
+        let newGameButton = document.getElementById("new-game");
+        let hintButton = document.getElementById("hint");
+        let levelElement = document.getElementById("level");
+        let comboElement = document.getElementById("combo");
+        let progressBar = document.getElementById("level-progress");
+        let levelUpDisplay = document.getElementById("level-up-display");
+        let levelUpText = document.getElementById("level-up-text");
+        let gameOverModal = document.getElementById("game-over-modal");
+        
+        const eliminateSound = new Audio('https://freesound.org/data/previews/392/392767_35187-lq.mp3');
+        
+        const languageButtons = document.querySelectorAll('.language-btn');
+        languageButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentLang = button.dataset.lang;
+                languageButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                updateUIText();
+            });
+        });
+        
+        function updateUIText() {
+            const t = translations[currentLang];
+            document.getElementById('game-title').textContent = t.title;
+            document.getElementById('level-display').innerHTML = `${t.level}: <span id="level">${gameState.level}</span>/100`;
+            document.getElementById('score-display').innerHTML = `${t.score}: <span id="score">${gameState.totalScore}</span>`;
+            document.getElementById('moves-display').innerHTML = `${t.moves}: <span id="moves">${gameState.moves}</span>`;
+            document.getElementById('time-display').innerHTML = `${t.time}: <span id="time">${gameState.timeRemaining}</span>s`;
+            document.getElementById('combo-display').innerHTML = `${t.combo}: <span id="combo">${gameState.combo}</span>x`;
+            document.getElementById('new-game').textContent = t.newGame;
+            document.getElementById('hint').textContent = t.hint;
+            levelElement = document.getElementById("level");
+            scoreElement = document.getElementById("score");
+            movesElement = document.getElementById("moves");
+            timeElement = document.getElementById("time");
+            comboElement = document.getElementById("combo");
+        }
+        
+        function initGame() {
+            gameState = {
+                board: [],
+                visualBoard: [],
+                score: 0,
+                totalScore: 0,
+                levelScore: 0,
+                level: 1,
+                moves: 0,
+                selected: null,
+                timeRemaining: config.timeLimit,
+                timer: null,
+                gameOver: false,
+                animating: false,
+                combo: 0,
+                comboTimeout: null,
+                nextLevelScore: config.scoreToLevelUp
+            };
+            
+            clearTimeout(gameState.comboTimeout);
+            if (gameState.timer) clearInterval(gameState.timer);
+            updateUIText();
+            scoreElement.textContent = "0";
+            movesElement.textContent = "0";
+            timeElement.textContent = config.timeLimit;
+            levelElement.textContent = "1";
+            comboElement.textContent = "0";
+            updateProgressBar();
+            
+            createBoard();
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            renderBoard();
+            startTimer();
+        }
+        
+        function createBoard() {
+            for (let row = 0; row < config.rows; row++) {
+                gameState.board[row] = [];
+                for (let col = 0; col < config.cols; col++) {
+                    let type;
+                    do {
+                        type = getRandomTileType();
+                        gameState.board[row][col] = { type, isBomb: false };
+                    } while (checkInitialMatches(row, col));
+                }
+            }
+            while (!hasPossibleMoves()) {
+                createBoard();
+            }
+        }
+        
+        function getRandomTileType() {
+            const availableTypes = Math.min(3 + Math.floor(gameState.level / 10), config.types.length);
+            return config.types[Math.floor(Math.random() * availableTypes)];
+        }
+        
+        function checkInitialMatches(row, col) {
+            if (col >= 2) {
+                if (gameState.board[row][col].type === gameState.board[row][col-1].type && 
+                    gameState.board[row][col].type === gameState.board[row][col-2].type) {
+                    return true;
+                }
+            }
+            if (row >= 2) {
+                if (gameState.board[row][col].type === gameState.board[row-1][col].type && 
+                    gameState.board[row][col].type === gameState.board[row-2][col].type) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function renderBoard() {
+            boardElement.innerHTML = "";
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    const tileData = gameState.visualBoard[row]?.[col] || gameState.board[row][col];
+                    if (!tileData) continue;
+                    
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    
+                    if (tileData.isBomb) {
+                        tile.classList.add("bomb");
+                        const fruit = document.createElement("span");
+                        fruit.className = "fruit";
+                        fruit.textContent = tileData.type;
+                        tile.appendChild(fruit);
+                    } else {
+                        tile.textContent = tileData.type;
+                    }
+                    
+                    const colors = {
+                        "🍎": "#ff6b6b",
+                        "🍊": "#ffa94d",
+                        "🍋": "#ffe066",
+                        "🍇": "#cc5de8",
+                        "🍉": "#20c997",
+                        "🍓": "#ff8787"
+                    };
+                    tile.style.backgroundColor = colors[tileData.type] || "#ddd";
+                    
+                    if (gameState.selected && 
+                        gameState.selected.row === row && 
+                        gameState.selected.col === col) {
+                        tile.classList.add("selected");
+                    }
+                    
+                    tile.addEventListener("click", () => {
+                        if (gameState.gameOver || gameState.animating) return;
+                        handleTileClick(row, col);
+                    });
+                    
+                    boardElement.appendChild(tile);
+                }
+            }
+        }
+        
+        function handleTileClick(row, col) {
+            const tileData = gameState.board[row][col];
+            if (!tileData) return;
+            
+            if (tileData.isBomb) {
+                triggerBomb(row, col, tileData.type);
+                return;
+            }
+            
+            if (gameState.selected) {
+                const selectedRow = gameState.selected.row;
+                const selectedCol = gameState.selected.col;
+                if (isAdjacent(row, col, selectedRow, selectedCol)) {
+                    swapTiles(row, col, selectedRow, selectedCol);
+                    gameState.selected = null;
+                } else {
+                    gameState.selected = { row, col };
+                    renderBoard();
+                }
+            } else {
+                gameState.selected = { row, col };
+                renderBoard();
+            }
+        }
+        
+        function isAdjacent(row1, col1, row2, col2) {
+            return (
+                (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                (Math.abs(col1 - col2) === 1 && row1 === row2)
+            );
+        }
+        
+        function swapTiles(row1, col1, row2, col2) {
+            if (gameState.animating) return;
+            if (gameState.board[row1][col1].isBomb || gameState.board[row2][col2].isBomb) {
+                gameState.selected = null;
+                return; // 炸弹不可移动
+            }
+            
+            gameState.animating = true;
+            
+            const tile1 = document.querySelector(`[data-row="${row1}"][data-col="${col1}"]`);
+            const tile2 = document.querySelector(`[data-row="${row2}"][data-col="${col2}"]`);
+            
+            const tile1Rect = tile1.getBoundingClientRect();
+            const tile2Rect = tile2.getBoundingClientRect();
+            const deltaX = tile2Rect.left - tile1Rect.left;
+            const deltaY = tile2Rect.top - tile1Rect.top;
+            
+            tile1.style.zIndex = "10";
+            tile2.style.zIndex = "10";
+            tile1.style.transition = `transform 0.3s ease`;
+            tile2.style.transition = `transform 0.3s ease`;
+            tile1.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            tile2.style.transform = `translate(${-deltaX}px, ${-deltaY}px)`;
+            
+            const temp = gameState.board[row1][col1];
+            gameState.board[row1][col1] = gameState.board[row2][col2];
+            gameState.board[row2][col2] = temp;
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            
+            setTimeout(() => {
+                const matches = findMatches();
+                if (matches.length > 0) {
+                    gameState.moves++;
+                    movesElement.textContent = gameState.moves;
+                    removeMatchesWithAnimation(matches);
+                } else {
+                    const temp = gameState.board[row1][col1];
+                    gameState.board[row1][col1] = gameState.board[row2][col2];
+                    gameState.board[row2][col2] = temp;
+                    gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                    tile1.style.transform = "";
+                    tile2.style.transform = "";
+                    setTimeout(() => {
+                        renderBoard();
+                        gameState.animating = false;
+                        resetCombo();
+                    }, 300);
+                }
+            }, 300);
+        }
+        
+        function findMatches() {
+            const matches = [];
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols - 2; col++) {
+                    const tile = gameState.board[row][col];
+                    if (!tile || tile.isBomb) continue;
+                    const type = tile.type;
+                    let matchLength = 1;
+                    let nextCol = col + 1;
+                    while (nextCol < config.cols && gameState.board[row][nextCol]?.type === type && !gameState.board[row][nextCol]?.isBomb) {
+                        matchLength++;
+                        nextCol++;
+                    }
+                    if (matchLength >= config.minMatch) {
+                        const match = { type: 'horizontal', row, col, length: matchLength, positions: [] };
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({ row, col: col + i });
+                        }
+                        matches.push(match);
+                    }
+                }
+            }
+            for (let col = 0; col < config.cols; col++) {
+                for (let row = 0; row < config.rows - 2; row++) {
+                    const tile = gameState.board[row][col];
+                    if (!tile || tile.isBomb) continue;
+                    const type = tile.type;
+                    let matchLength = 1;
+                    let nextRow = row + 1;
+                    while (nextRow < config.rows && gameState.board[nextRow][col]?.type === type && !gameState.board[nextRow][col]?.isBomb) {
+                        matchLength++;
+                        nextRow++;
+                    }
+                    if (matchLength >= config.minMatch) {
+                        const match = { type: 'vertical', row, col, length: matchLength, positions: [] };
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({ row: row + i, col });
+                        }
+                        matches.push(match);
+                    }
+                }
+            }
+            return matches;
+        }
+        
+        function removeMatchesWithAnimation(matches) {
+            let totalRemoved = 0;
+            const tilesToRemove = new Set();
+            const bombPositions = new Map();
+            
+            matches.forEach(match => {
+                const shouldGenerateBomb = match.length >= config.bombThreshold;
+                match.positions.forEach(pos => {
+                    const key = `${pos.row}-${pos.col}`;
+                    tilesToRemove.add(key);
+                    totalRemoved++;
+                    if (shouldGenerateBomb) {
+                        const centerIdx = Math.floor(match.length / 2);
+                        if (match.positions[centerIdx].row === pos.row && match.positions[centerIdx].col === pos.col) {
+                            bombPositions.set(key, gameState.board[pos.row][pos.col].type);
+                            tilesToRemove.delete(key);
+                        }
+                    }
+                });
+            });
+            
+            updateCombo();
+            const comboMultiplier = 1 + (gameState.combo - 1) * config.comboMultiplier;
+            const points = Math.floor(config.baseScorePerTile * totalRemoved * comboMultiplier);
+            const matchCenter = calculateMatchCenter(matches);
+            showScorePopup(points, matchCenter.x, matchCenter.y);
+            
+            gameState.score += points;
+            gameState.totalScore += points;
+            gameState.levelScore += points;
+            scoreElement.textContent = gameState.totalScore;
+            checkLevelUp();
+            
+            try {
+                eliminateSound.play().catch(error => console.log("Audio play failed:", error));
+            } catch (error) {
+                console.log("Audio error:", error);
+            }
+            
+            tilesToRemove.forEach(key => {
+                const [row, col] = key.split('-').map(Number);
+                const tile = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (tile) tile.classList.add('removing');
+                gameState.board[row][col] = null;
+            });
+            
+            bombPositions.forEach((type, key) => {
+                const [row, col] = key.split('-').map(Number);
+                gameState.board[row][col] = { type, isBomb: true };
+            });
+            
+            setTimeout(() => {
+                dropTilesWithAnimation();
+            }, config.animationDuration);
+        }
+        
+        function triggerBomb(row, col, bombType) {
+            gameState.animating = true;
+            try {
+                eliminateSound.play().catch(error => console.log("Audio play failed:", error));
+            } catch (error) {
+                console.log("Audio error:", error);
+            }
+            
+            switch (bombType) {
+                case "🍎": explodeRowColumn(row, col); break;
+                case "🍊": explodeSurrounding(row, col); break;
+                case "🍋": explodeRandom(row, col); break;
+                case "🍇": explodeOuterEdges(row, col); break;
+                case "🍉": explodeCross(row, col); break;
+                case "🍓": explodeAll(row, col); break;
+            }
+            
+            gameState.board[row][col] = null;
+            setTimeout(() => {
+                dropTilesWithAnimation();
+            }, 2000); // 延长至 2 秒，与动画同步
+        }
+        
+        function explodeRowColumn(row, col) {
+            for (let r = 0; r < config.rows; r++) {
+                if (gameState.board[r][col]) {
+                    const tile = document.querySelector(`[data-row="${r}"][data-col="${col}"]`);
+                    if (tile) tile.classList.add('removing');
+                    gameState.board[r][col] = null;
+                }
+            }
+            for (let c = 0; c < config.cols; c++) {
+                if (gameState.board[row][c]) {
+                    const tile = document.querySelector(`[data-row="${row}"][data-col="${c}"]`);
+                    if (tile) tile.classList.add('removing');
+                    gameState.board[row][c] = null;
+                }
+            }
+        }
+        
+        function explodeSurrounding(row, col) {
+            for (let r = row - 1; r <= row + 1; r++) {
+                for (let c = col - 1; c <= col + 1; c++) {
+                    if (r >= 0 && r < config.rows && c >= 0 && c < config.cols && !(r === row && c === col)) {
+                        if (gameState.board[r][c]) {
+                            const tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            if (tile) tile.classList.add('removing');
+                            gameState.board[r][c] = null;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function explodeRandom(row, col) {
+            let count = 0;
+            while (count < 10) {
+                const r = Math.floor(Math.random() * config.rows);
+                const c = Math.floor(Math.random() * config.cols);
+                if (gameState.board[r][c] && !(r === row && c === col)) {
+                    const tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (tile) tile.classList.add('removing');
+                    gameState.board[r][c] = null;
+                    count++;
+                }
+            }
+        }
+        
+        function explodeOuterEdges(row, col) {
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.cols; c++) {
+                    if (r === 0 || r === config.rows - 1 || c === 0 || c === config.cols - 1) {
+                        if (gameState.board[r][c]) {
+                            const tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            if (tile) tile.classList.add('removing');
+                            gameState.board[r][c] = null;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function explodeCross(row, col) {
+            const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+            for (let i = 0; i < config.rows; i++) {
+                for (const [dr, dc] of directions) {
+                    const r = row + dr * i;
+                    const c = col + dc * i;
+                    if (r >= 0 && r < config.rows && c >= 0 && c < config.cols) {
+                        if (gameState.board[r][c]) {
+                            const tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            if (tile) tile.classList.add('removing');
+                            gameState.board[r][c] = null;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function explodeAll(row, col) {
+            for (let r = 0; r < config.rows; r++) {
+                for (let c = 0; c < config.cols; c++) {
+                    if (gameState.board[r][c]) {
+                        const tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (tile) tile.classList.add('removing');
+                        gameState.board[r][c] = null;
+                    }
+                }
+            }
+        }
+        
+        function calculateMatchCenter(matches) {
+            let totalX = 0, totalY = 0, count = 0;
+            matches.forEach(match => {
+                match.positions.forEach(pos => {
+                    const tile = document.querySelector(`[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                    if (tile) {
+                        const rect = tile.getBoundingClientRect();
+                        totalX += rect.left + rect.width / 2;
+                        totalY += rect.top + rect.height / 2;
+                        count++;
+                    }
+                });
+            });
+            return { x: totalX / count, y: totalY / count };
+        }
+        
+        function showScorePopup(score, x, y) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = `+${score}`;
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+        
+        function updateCombo() {
+            clearTimeout(gameState.comboTimeout);
+            gameState.combo++;
+            comboElement.textContent = gameState.combo;
+            gameState.comboTimeout = setTimeout(resetCombo, 2000);
+        }
+        
+        function resetCombo() {
+            clearTimeout(gameState.comboTimeout);
+            gameState.combo = 0;
+            comboElement.textContent = gameState.combo;
+        }
+        
+        function checkLevelUp() {
+            updateProgressBar();
+            if (gameState.levelScore >= gameState.nextLevelScore && gameState.level < config.maxLevel) {
+                levelUp();
+            }
+        }
+        
+        function levelUp() {
+            gameState.level++;
+            gameState.levelScore = 0;
+            gameState.nextLevelScore = Math.floor(config.scoreToLevelUp * Math.pow(1.2, gameState.level - 1));
+            levelElement.textContent = gameState.level;
+            updateProgressBar();
+            
+            const t = translations[currentLang];
+            levelUpText.textContent = t.levelUp.replace('{level}', gameState.level);
+            levelUpDisplay.classList.add('show');
+            setTimeout(() => levelUpDisplay.classList.remove('show'), 2000);
+            
+            gameState.timeRemaining = config.timeLimit;
+            timeElement.textContent = gameState.timeRemaining;
+        }
+        
+        function updateProgressBar() {
+            const progress = (gameState.levelScore / gameState.nextLevelScore) * 100;
+            progressBar.style.width = `${Math.min(progress, 100)}%`;
+        }
+        
+        function dropTilesWithAnimation() {
+            const columnsToProcess = [];
+            for (let col = 0; col < config.cols; col++) {
+                const colInfo = { col, drops: [], newTiles: [] };
+                let emptySpaces = 0;
+                for (let row = config.rows - 1; row >= 0; row--) {
+                    if (!gameState.board[row][col]) {
+                        emptySpaces++;
+                    } else if (emptySpaces > 0) {
+                        colInfo.drops.push({
+                            fromRow: row,
+                            toRow: row + emptySpaces,
+                            type: gameState.board[row][col]
+                        });
+                        gameState.board[row + emptySpaces][col] = gameState.board[row][col];
+                        gameState.board[row][col] = null;
+                    }
+                }
+                for (let row = 0; row < emptySpaces; row++) {
+                    const type = getRandomTileType();
+                    colInfo.newTiles.push({ row, type: { type, isBomb: false } });
+                    gameState.board[row][col] = { type, isBomb: false };
+                }
+                columnsToProcess.push(colInfo);
+            }
+            
+            gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+            columnsToProcess.forEach(colInfo => {
+                colInfo.drops.forEach(drop => {
+                    gameState.visualBoard[drop.fromRow][colInfo.col] = drop.type;
+                    gameState.visualBoard[drop.toRow][colInfo.col] = null;
+                });
+                colInfo.newTiles.forEach(newTile => {
+                    gameState.visualBoard[newTile.row][colInfo.col] = null;
+                });
+            });
+            
+            renderBoard();
+            
+            setTimeout(() => {
+                columnsToProcess.forEach(colInfo => {
+                    colInfo.drops.forEach(drop => {
+                        const tile = document.querySelector(`[data-row="${drop.fromRow}"][data-col="${colInfo.col}"]`);
+                        if (tile) {
+                            tile.classList.add('dropping');
+                            const distance = (drop.toRow - drop.fromRow) * (tile.offsetHeight + 4);
+                            tile.style.transform = `translateY(${distance}px)`;
+                        }
+                    });
+                });
+                
+                setTimeout(() => {
+                    gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                    renderBoard();
+                    columnsToProcess.forEach(colInfo => {
+                        colInfo.newTiles.forEach(newTile => {
+                            const tile = document.querySelector(`[data-row="${newTile.row}"][data-col="${colInfo.col}"]`);
+                            if (tile) tile.classList.add('new-tile');
+                        });
+                    });
+                    
+                    setTimeout(() => {
+                        const newMatches = findMatches();
+                        if (newMatches.length > 0) {
+                            removeMatchesWithAnimation(newMatches);
+                        } else if (!hasPossibleMoves()) {
+                            shuffleBoard();
+                            gameState.animating = false;
+                        } else {
+                            gameState.animating = false;
+                        }
+                    }, config.animationDuration);
+                }, config.animationDuration);
+            }, 50);
+        }
+        
+        function hasPossibleMoves() {
+            const tempBoard = gameState.board.map(row => row.map(tile => tile ? { ...tile } : null));
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (col < config.cols - 1 && tempBoard[row][col] && !tempBoard[row][col].isBomb && tempBoard[row][col+1] && !tempBoard[row][col+1].isBomb) {
+                        [tempBoard[row][col], tempBoard[row][col+1]] = [tempBoard[row][col+1], tempBoard[row][col]];
+                        const matches = findMatches(tempBoard);
+                        [tempBoard[row][col], tempBoard[row][col+1]] = [tempBoard[row][col+1], tempBoard[row][col]];
+                        if (matches.length > 0) return true;
+                    }
+                    if (row < config.rows - 1 && tempBoard[row][col] && !tempBoard[row][col].isBomb && tempBoard[row+1][col] && !tempBoard[row+1][col].isBomb) {
+                        [tempBoard[row][col], tempBoard[row+1][col]] = [tempBoard[row+1][col], tempBoard[row][col]];
+                        const matches = findMatches(tempBoard);
+                        [tempBoard[row][col], tempBoard[row+1][col]] = [tempBoard[row+1][col], tempBoard[row][col]];
+                        if (matches.length > 0) return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        function findMatches(board = gameState.board) {
+            const matches = [];
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols - 2; col++) {
+                    const tile = board[row][col];
+                    if (!tile || tile.isBomb) continue;
+                    const type = tile.type;
+                    let matchLength = 1;
+                    let nextCol = col + 1;
+                    while (nextCol < config.cols && board[row][nextCol]?.type === type && !board[row][nextCol]?.isBomb) {
+                        matchLength++;
+                        nextCol++;
+                    }
+                    if (matchLength >= config.minMatch) {
+                        const match = { type: 'horizontal', row, col, length: matchLength, positions: [] };
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({ row, col: col + i });
+                        }
+                        matches.push(match);
+                    }
+                }
+            }
+            for (let col = 0; col < config.cols; col++) {
+                for (let row = 0; row < config.rows - 2; row++) {
+                    const tile = board[row][col];
+                    if (!tile || tile.isBomb) continue;
+                    const type = tile.type;
+                    let matchLength = 1;
+                    let nextRow = row + 1;
+                    while (nextRow < config.rows && board[nextRow][col]?.type === type && !board[nextRow][col]?.isBomb) {
+                        matchLength++;
+                        nextRow++;
+                    }
+                    if (matchLength >= config.minMatch) {
+                        const match = { type: 'vertical', row, col, length: matchLength, positions: [] };
+                        for (let i = 0; i < matchLength; i++) {
+                            match.positions.push({ row: row + i, col });
+                        }
+                        matches.push(match);
+                    }
+                }
+            }
+            return matches;
+        }
+        
+        function shuffleBoard() {
+            if (gameState.animating) return;
+            gameState.animating = true;
+            
+            const allTiles = [];
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (gameState.board[row][col]) allTiles.push(gameState.board[row][col]);
+                }
+            }
+            for (let i = allTiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allTiles[i], allTiles[j]] = [allTiles[j], allTiles[i]];
+            }
+            
+            let index = 0;
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    gameState.board[row][col] = index < allTiles.length ? allTiles[index++] : null;
+                }
+            }
+            
+            if (!hasPossibleMoves()) {
+                shuffleBoard();
+                return;
+            }
+            
+            const tiles = document.querySelectorAll('.tile');
+            tiles.forEach(tile => {
+                tile.style.transition = "transform 0.5s ease, opacity 0.2s ease";
+                tile.style.transform = "scale(0)";
+                tile.style.opacity = "0";
+            });
+            
+            setTimeout(() => {
+                gameState.visualBoard = JSON.parse(JSON.stringify(gameState.board));
+                renderBoard();
+                setTimeout(() => {
+                    const newTiles = document.querySelectorAll('.tile');
+                    newTiles.forEach(tile => tile.classList.add('new-tile'));
+                    setTimeout(() => gameState.animating = false, config.animationDuration);
+                }, 50);
+            }, 500);
+        }
+        
+        function startTimer() {
+            if (gameState.timer) clearInterval(gameState.timer);
+            gameState.timer = setInterval(() => {
+                gameState.timeRemaining--;
+                timeElement.textContent = gameState.timeRemaining;
+                if (gameState.timeRemaining <= 0) {
+                    clearInterval(gameState.timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function endGame() {
+            clearInterval(gameState.timer);
+            gameState.gameOver = true;
+            const t = translations[currentLang];
+            document.getElementById('game-over-text').textContent = t.gameOver;
+            document.getElementById('game-over-score').textContent = `${t.yourScore}: ${gameState.totalScore}`;
+            document.getElementById('game-over-moves').textContent = `${t.usedMoves}: ${gameState.moves}`;
+            gameOverModal.classList.add('show');
+        }
+        
+        function showHint() {
+            if (gameState.gameOver || gameState.animating) return;
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (col < config.cols - 1 && gameState.board[row][col] && !gameState.board[row][col].isBomb && gameState.board[row][col+1] && !gameState.board[row][col+1].isBomb) {
+                        [gameState.board[row][col], gameState.board[row][col+1]] = [gameState.board[row][col+1], gameState.board[row][col]];
+                        const matches = findMatches();
+                        [gameState.board[row][col], gameState.board[row][col+1]] = [gameState.board[row][col+1], gameState.board[row][col]];
+                        if (matches.length > 0) {
+                            const tile1 = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            const tile2 = document.querySelector(`[data-row="${row}"][data-col="${col+1}"]`);
+                            if (tile1 && tile2) {
+                                tile1.classList.add("selected");
+                                tile2.classList.add("selected");
+                                setTimeout(() => {
+                                    tile1.classList.remove("selected");
+                                    tile2.classList.remove("selected");
+                                }, 1000);
+                            }
+                            return;
+                        }
+                    }
+                    if (row < config.rows - 1 && gameState.board[row][col] && !gameState.board[row][col].isBomb && gameState.board[row+1][col] && !gameState.board[row+1][col].isBomb) {
+                        [gameState.board[row][col], gameState.board[row+1][col]] = [gameState.board[row+1][col], gameState.board[row][col]];
+                        const matches = findMatches();
+                        [gameState.board[row][col], gameState.board[row+1][col]] = [gameState.board[row+1][col], gameState.board[row][col]];
+                        if (matches.length > 0) {
+                            const tile1 = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                            const tile2 = document.querySelector(`[data-row="${row+1}"][data-col="${col}"]`);
+                            if (tile1 && tile2) {
+                                tile1.classList.add("selected");
+                                tile2.classList.add("selected");
+                                setTimeout(() => {
+                                    tile1.classList.remove("selected");
+                                    tile2.classList.remove("selected");
+                                }, 1000);
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
+        newGameButton.addEventListener("click", initGame);
+        hintButton.addEventListener("click", showHint);
+        
+        initGame();
+    </script>
+</body>
+</html>
