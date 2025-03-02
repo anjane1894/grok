@@ -1,0 +1,87 @@
+/* Main Styles */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #0c0c1d;
+  color: #e0e0ff;
+  line-height: 1.6;
+}
+
+.mystic-gradient {
+  background: linear-gradient(135deg, #1a1a3a 0%, #0c0c1d 100%);
+}
+
+.card-glow {
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+}
+
+.mystic-border {
+  border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.cosmic-bg {
+  background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+}
+
+.star-field {
+  position: relative;
+  overflow: hidden;
+}
+
+.fortune-card {
+  transition: all 0.3s ease;
+}
+
+.fortune-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 25px rgba(138, 43, 226, 0.7);
+}
+
+.testimonial-card {
+  background: rgba(26, 26, 58, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.crystal-ball {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4) 0%, rgba(138, 43, 226, 0.2) 60%, rgba(26, 26, 58, 0.9) 100%);
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+}
+
+.divination-symbol {
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.divination-symbol:hover {
+  opacity: 1;
+  transform: rotate(10deg) scale(1.05);
+}
+
+.result-highlight {
+  background: linear-gradient(90deg, rgba(138, 43, 226, 0) 0%, rgba(138, 43, 226, 0.3) 50%, rgba(138, 43, 226, 0) 100%);
+}
+
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
