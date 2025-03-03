@@ -50,31 +50,41 @@ function Toast({ message, type = 'info', onClose }) {
     
     const styles = getToastStyles();
     
-    return (
-      <div 
-        data-name="toast"
-        className={`toast-notification ${styles.bgColor} border ${styles.borderColor} rounded-lg shadow-lg p-4 flex items-center max-w-md ${isVisible ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-      >
-        <div className="flex-shrink-0 mr-3">
-          <i className={`fas ${styles.icon} text-xl ${styles.textColor}`}></i>
-        </div>
-        <div className="flex-grow">
-          <p className={`${styles.textColor} text-sm`}>{message}</p>
-        </div>
-        <div className="flex-shrink-0 ml-3">
-          <button 
-            onClick={() => {
-              setIsVisible(false);
-              setTimeout(() => {
-                onClose();
-              }, 300);
-            }}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <i className="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
+    return React.createElement(
+      'div',
+      {
+        'data-name': "toast",
+        className: `toast-notification ${styles.bgColor} border ${styles.borderColor} rounded-lg shadow-lg p-4 flex items-center max-w-md ${isVisible ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`
+      },
+      [
+        React.createElement(
+          'div',
+          { key: 'icon-container', className: "flex-shrink-0 mr-3" },
+          React.createElement('i', { className: `fas ${styles.icon} text-xl ${styles.textColor}` })
+        ),
+        React.createElement(
+          'div',
+          { key: 'content', className: "flex-grow" },
+          React.createElement('p', { className: `${styles.textColor} text-sm` }, message)
+        ),
+        React.createElement(
+          'div',
+          { key: 'close-button', className: "flex-shrink-0 ml-3" },
+          React.createElement(
+            'button',
+            {
+              onClick: () => {
+                setIsVisible(false);
+                setTimeout(() => {
+                  onClose();
+                }, 300);
+              },
+              className: "text-gray-400 hover:text-white transition-colors"
+            },
+            React.createElement('i', { className: "fas fa-times" })
+          )
+        )
+      ]
     );
   } catch (error) {
     console.error("Toast component error:", error);
@@ -85,17 +95,20 @@ function Toast({ message, type = 'info', onClose }) {
 
 function ToastContainer({ toasts, removeToast }) {
   try {
-    return (
-      <div data-name="toast-container" className="fixed top-4 right-4 z-50 flex flex-col space-y-4">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
+    return React.createElement(
+      'div',
+      {
+        'data-name': "toast-container",
+        className: "fixed top-4 right-4 z-50 flex flex-col space-y-4"
+      },
+      toasts.map((toast) => 
+        React.createElement(Toast, {
+          key: toast.id,
+          message: toast.message,
+          type: toast.type,
+          onClose: () => removeToast(toast.id)
+        })
+      )
     );
   } catch (error) {
     console.error("ToastContainer component error:", error);

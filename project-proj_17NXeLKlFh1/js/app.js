@@ -1,29 +1,36 @@
 // Root component that wraps the application
 function App() {
   try {
-    return (
-      <React.StrictMode>
-        <HomePage />
-      </React.StrictMode>
+    return React.createElement(
+      React.StrictMode,
+      null,
+      React.createElement(HomePage, null)
     );
   } catch (error) {
     console.error("Application error:", error);
     reportError(error);
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0c0c1d] text-white p-4">
-        <div className="text-center p-8 bg-[#1a1a3a] rounded-lg border border-purple-900 shadow-lg max-w-lg">
-          <i className="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-          <h2 className="text-2xl font-bold mb-2">应用程序错误</h2>
-          <p className="text-gray-300 mb-4">很抱歉，神秘命运遇到了一点小问题，请稍后再试。</p>
-          <p className="text-sm text-gray-400 mb-6">错误信息: {error?.message || "未知错误"}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-md transition-colors"
-          >
-            刷新页面
-          </button>
-        </div>
-      </div>
+    return React.createElement(
+      'div',
+      { className: "flex items-center justify-center min-h-screen bg-[#0c0c1d] text-white p-4" },
+      React.createElement(
+        'div',
+        { className: "text-center p-8 bg-[#1a1a3a] rounded-lg border border-purple-900 shadow-lg max-w-lg" },
+        [
+          React.createElement('i', { key: 'icon', className: "fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4" }),
+          React.createElement('h2', { key: 'title', className: "text-2xl font-bold mb-2" }, "应用程序错误"),
+          React.createElement('p', { key: 'message', className: "text-gray-300 mb-4" }, "很抱歉，神秘命运遇到了一点小问题，请稍后再试。"),
+          React.createElement('p', { key: 'error', className: "text-sm text-gray-400 mb-6" }, `错误信息: ${error?.message || "未知错误"}`),
+          React.createElement(
+            'button',
+            {
+              key: 'button',
+              onClick: () => window.location.reload(),
+              className: "px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-md transition-colors"
+            },
+            "刷新页面"
+          )
+        ]
+      )
     );
   }
 }
@@ -40,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rootElement = document.getElementById('root');
     if (rootElement) {
       const root = ReactDOM.createRoot(rootElement);
-      root.render(<App />);
+      root.render(React.createElement(App, null));
     } else {
       console.error('Root element not found');
     }

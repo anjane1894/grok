@@ -78,143 +78,233 @@ function FortuneForm({ onSubmit, selectedType }) {
       return getFortunePrompt(selectedType);
     };
     
-    return (
-      <section data-name="fortune-form" id="fortune-form" className="py-16 bg-[#0c0c1d]">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold mb-4 text-white">开启您的命运之旅</h2>
-              <p className="text-gray-300">{getPromptText()}</p>
-            </div>
+    return React.createElement(
+      'section', 
+      {
+        'data-name': "fortune-form",
+        id: "fortune-form",
+        className: "py-16 bg-[#0c0c1d]"
+      },
+      React.createElement(
+        'div',
+        { className: "container mx-auto px-4" },
+        React.createElement(
+          'div',
+          { className: "max-w-2xl mx-auto" },
+          [
+            React.createElement(
+              'div',
+              { className: "text-center mb-10" },
+              [
+                React.createElement('h2', { className: "text-3xl font-bold mb-4 text-white" }, "开启您的命运之旅"),
+                React.createElement('p', { className: "text-gray-300" }, getPromptText())
+              ]
+            ),
             
-            <div className="bg-[#1a1a3a] p-8 rounded-lg border border-purple-900 shadow-lg card-glow">
-              <form onSubmit={handleSubmit}>
-                <div className="mb-6">
-                  <label htmlFor="name" className="block text-gray-300 mb-2">姓名</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 bg-[#0c0c1d] border ${errors.name ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`}
-                    placeholder="请输入您的姓名"
-                  />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                </div>
-                
-                <div className="mb-6">
-                  <label className="block text-gray-300 mb-2">性别</label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="gender"
-                        value="男"
-                        checked={formData.gender === "男"}
-                        onChange={handleChange}
-                        className="mr-2 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span>男</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="gender"
-                        value="女"
-                        checked={formData.gender === "女"}
-                        onChange={handleChange}
-                        className="mr-2 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span>女</span>
-                    </label>
-                  </div>
-                </div>
-                
-                <div className="mb-6">
-                  <label className="block text-gray-300 mb-2">出生日期</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <select
-                        name="birthYear"
-                        value={formData.birthYear}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthYear ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`}
-                      >
-                        <option value="">年</option>
-                        {years.map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                      {errors.birthYear && <p className="text-red-500 text-sm mt-1">{errors.birthYear}</p>}
-                    </div>
-                    <div>
-                      <select
-                        name="birthMonth"
-                        value={formData.birthMonth}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthMonth ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`}
-                      >
-                        <option value="">月</option>
-                        {months.map(month => (
-                          <option key={month} value={month}>{month}</option>
-                        ))}
-                      </select>
-                      {errors.birthMonth && <p className="text-red-500 text-sm mt-1">{errors.birthMonth}</p>}
-                    </div>
-                    <div>
-                      <select
-                        name="birthDay"
-                        value={formData.birthDay}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthDay ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`}
-                      >
-                        <option value="">日</option>
-                        {days.map(day => (
-                          <option key={day} value={day}>{day}</option>
-                        ))}
-                      </select>
-                      {errors.birthDay && <p className="text-red-500 text-sm mt-1">{errors.birthDay}</p>}
-                    </div>
-                  </div>
-                </div>
-                
-                {selectedType === "tarot" && (
-                  <div className="mb-6">
-                    <label htmlFor="question" className="block text-gray-300 mb-2">您的问题</label>
-                    <textarea
-                      id="question"
-                      name="question"
-                      value={formData.question}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 bg-[#0c0c1d] border ${errors.question ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500 h-32`}
-                      placeholder="请输入您想要解答的问题"
-                    ></textarea>
-                    {errors.question && <p className="text-red-500 text-sm mt-1">{errors.question}</p>}
-                  </div>
-                )}
-                
-                <div className="mt-8">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center">
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        解读中...
-                      </span>
-                    ) : (
-                      "开始解读"
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
+            React.createElement(
+              'div',
+              { className: "bg-[#1a1a3a] p-8 rounded-lg border border-purple-900 shadow-lg card-glow" },
+              React.createElement(
+                'form',
+                { onSubmit: handleSubmit },
+                [
+                  // 姓名字段
+                  React.createElement(
+                    'div',
+                    { className: "mb-6" },
+                    [
+                      React.createElement('label', { htmlFor: "name", className: "block text-gray-300 mb-2" }, "姓名"),
+                      React.createElement('input', {
+                        type: "text",
+                        id: "name",
+                        name: "name",
+                        value: formData.name,
+                        onChange: handleChange,
+                        className: `w-full px-4 py-2 bg-[#0c0c1d] border ${errors.name ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`,
+                        placeholder: "请输入您的姓名"
+                      }),
+                      errors.name && React.createElement('p', { className: "text-red-500 text-sm mt-1" }, errors.name)
+                    ]
+                  ),
+                  
+                  // 性别字段
+                  React.createElement(
+                    'div',
+                    { className: "mb-6" },
+                    [
+                      React.createElement('label', { className: "block text-gray-300 mb-2" }, "性别"),
+                      React.createElement(
+                        'div',
+                        { className: "flex space-x-4" },
+                        [
+                          React.createElement(
+                            'label',
+                            { className: "flex items-center" },
+                            [
+                              React.createElement('input', {
+                                type: "radio",
+                                name: "gender",
+                                value: "男",
+                                checked: formData.gender === "男",
+                                onChange: handleChange,
+                                className: "mr-2 text-purple-600 focus:ring-purple-500"
+                              }),
+                              React.createElement('span', {}, "男")
+                            ]
+                          ),
+                          React.createElement(
+                            'label',
+                            { className: "flex items-center" },
+                            [
+                              React.createElement('input', {
+                                type: "radio",
+                                name: "gender",
+                                value: "女",
+                                checked: formData.gender === "女",
+                                onChange: handleChange,
+                                className: "mr-2 text-purple-600 focus:ring-purple-500"
+                              }),
+                              React.createElement('span', {}, "女")
+                            ]
+                          )
+                        ]
+                      )
+                    ]
+                  ),
+                  
+                  // 出生日期字段
+                  React.createElement(
+                    'div',
+                    { className: "mb-6" },
+                    [
+                      React.createElement('label', { className: "block text-gray-300 mb-2" }, "出生日期"),
+                      React.createElement(
+                        'div',
+                        { className: "grid grid-cols-3 gap-4" },
+                        [
+                          // 年份选择
+                          React.createElement(
+                            'div',
+                            {},
+                            [
+                              React.createElement(
+                                'select',
+                                {
+                                  name: "birthYear",
+                                  value: formData.birthYear,
+                                  onChange: handleChange,
+                                  className: `w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthYear ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`
+                                },
+                                [
+                                  React.createElement('option', { value: "" }, "年"),
+                                  ...years.map(year => 
+                                    React.createElement('option', { key: year, value: year }, year)
+                                  )
+                                ]
+                              ),
+                              errors.birthYear && React.createElement('p', { className: "text-red-500 text-sm mt-1" }, errors.birthYear)
+                            ]
+                          ),
+                          
+                          // 月份选择
+                          React.createElement(
+                            'div',
+                            {},
+                            [
+                              React.createElement(
+                                'select',
+                                {
+                                  name: "birthMonth",
+                                  value: formData.birthMonth,
+                                  onChange: handleChange,
+                                  className: `w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthMonth ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`
+                                },
+                                [
+                                  React.createElement('option', { value: "" }, "月"),
+                                  ...months.map(month => 
+                                    React.createElement('option', { key: month, value: month }, month)
+                                  )
+                                ]
+                              ),
+                              errors.birthMonth && React.createElement('p', { className: "text-red-500 text-sm mt-1" }, errors.birthMonth)
+                            ]
+                          ),
+                          
+                          // 日期选择
+                          React.createElement(
+                            'div',
+                            {},
+                            [
+                              React.createElement(
+                                'select',
+                                {
+                                  name: "birthDay",
+                                  value: formData.birthDay,
+                                  onChange: handleChange,
+                                  className: `w-full px-4 py-2 bg-[#0c0c1d] border ${errors.birthDay ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500`
+                                },
+                                [
+                                  React.createElement('option', { value: "" }, "日"),
+                                  ...days.map(day => 
+                                    React.createElement('option', { key: day, value: day }, day)
+                                  )
+                                ]
+                              ),
+                              errors.birthDay && React.createElement('p', { className: "text-red-500 text-sm mt-1" }, errors.birthDay)
+                            ]
+                          )
+                        ]
+                      )
+                    ]
+                  ),
+                  
+                  // 问题字段（仅塔罗牌）
+                  selectedType === "tarot" && React.createElement(
+                    'div',
+                    { className: "mb-6" },
+                    [
+                      React.createElement('label', { htmlFor: "question", className: "block text-gray-300 mb-2" }, "您的问题"),
+                      React.createElement('textarea', {
+                        id: "question",
+                        name: "question",
+                        value: formData.question,
+                        onChange: handleChange,
+                        className: `w-full px-4 py-2 bg-[#0c0c1d] border ${errors.question ? 'border-red-500' : 'border-purple-900'} rounded text-white focus:outline-none focus:ring-1 focus:ring-purple-500 h-32`,
+                        placeholder: "请输入您想要解答的问题"
+                      }),
+                      errors.question && React.createElement('p', { className: "text-red-500 text-sm mt-1" }, errors.question)
+                    ]
+                  ),
+                  
+                  // 提交按钮
+                  React.createElement(
+                    'div',
+                    { className: "mt-8" },
+                    React.createElement(
+                      'button',
+                      {
+                        type: "submit",
+                        disabled: loading,
+                        className: "w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-md font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                      },
+                      loading ? 
+                        React.createElement(
+                          'span',
+                          { className: "flex items-center justify-center" },
+                          [
+                            React.createElement('i', { className: "fas fa-spinner fa-spin mr-2" }),
+                            "解读中..."
+                          ]
+                        ) : 
+                        "开始解读"
+                    )
+                  )
+                ]
+              )
+            )
+          ]
+        )
+      )
     );
   } catch (error) {
     console.error("FortuneForm component error:", error);

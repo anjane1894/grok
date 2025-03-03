@@ -46,67 +46,80 @@ function HomePage() {
       setToasts(prev => prev.filter(toast => toast.id !== id));
     };
     
-    return (
-      <div data-name="home-page">
-        {/* Background Elements */}
-        <MysticElements />
+    return React.createElement(
+      'div',
+      { 'data-name': "home-page" },
+      [
+        // Background Elements
+        React.createElement(MysticElements, { key: 'mystic-elements' }),
         
-        {/* Header */}
-        <Header />
+        // Header
+        React.createElement(Header, { key: 'header' }),
         
-        {/* Hero Section */}
-        <Hero />
+        // Hero Section
+        React.createElement(Hero, { key: 'hero' }),
         
-        {/* Fortune Types Section */}
-        <FortuneTypes 
-          onTypeSelect={handleFortuneTypeSelect} 
-          selectedType={selectedFortuneType} 
-        />
+        // Fortune Types Section
+        React.createElement(FortuneTypes, { 
+          key: 'fortune-types',
+          onTypeSelect: handleFortuneTypeSelect, 
+          selectedType: selectedFortuneType 
+        }),
         
-        {/* Fortune Form Section */}
-        <FortuneForm 
-          onSubmit={handleFortuneFormSubmit}
-          selectedType={selectedFortuneType}
-        />
+        // Fortune Form Section
+        React.createElement(FortuneForm, { 
+          key: 'fortune-form',
+          onSubmit: handleFortuneFormSubmit,
+          selectedType: selectedFortuneType
+        }),
         
-        {/* Fortune Result Section */}
-        <FortuneResult 
-          result={fortuneResult}
-          loading={loading}
-          userData={userData}
-          selectedType={selectedFortuneType}
-        />
+        // Fortune Result Section
+        React.createElement(FortuneResult, { 
+          key: 'fortune-result',
+          result: fortuneResult,
+          loading: loading,
+          userData: userData,
+          selectedType: selectedFortuneType
+        }),
         
-        {/* Testimonials Section */}
-        <Testimonials />
+        // Testimonials Section
+        React.createElement(Testimonials, { key: 'testimonials' }),
         
-        {/* Footer */}
-        <Footer />
+        // Footer
+        React.createElement(Footer, { key: 'footer' }),
         
-        {/* Toast Container */}
-        <ToastContainer
-          toasts={toasts}
-          removeToast={removeToast}
-        />
-      </div>
+        // Toast Container
+        React.createElement(ToastContainer, {
+          key: 'toast-container',
+          toasts: toasts,
+          removeToast: removeToast
+        })
+      ]
     );
   } catch (error) {
     console.error("HomePage component error:", error);
     reportError(error);
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0c0c1d] text-white">
-        <div className="text-center p-8 bg-[#1a1a3a] rounded-lg border border-purple-900 shadow-lg">
-          <i className="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-          <h2 className="text-2xl font-bold mb-2">页面加载失败</h2>
-          <p className="text-gray-300 mb-4">很抱歉，命运之门暂时关闭，请稍后再试...</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-md transition-colors"
-          >
-            刷新页面
-          </button>
-        </div>
-      </div>
+    return React.createElement(
+      'div',
+      { className: "flex items-center justify-center min-h-screen bg-[#0c0c1d] text-white" },
+      React.createElement(
+        'div',
+        { className: "text-center p-8 bg-[#1a1a3a] rounded-lg border border-purple-900 shadow-lg" },
+        [
+          React.createElement('i', { key: 'icon', className: "fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4" }),
+          React.createElement('h2', { key: 'title', className: "text-2xl font-bold mb-2" }, "页面加载失败"),
+          React.createElement('p', { key: 'message', className: "text-gray-300 mb-4" }, "很抱歉，命运之门暂时关闭，请稍后再试..."),
+          React.createElement(
+            'button',
+            {
+              key: 'button',
+              onClick: () => window.location.reload(),
+              className: "px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-md transition-colors"
+            },
+            "刷新页面"
+          )
+        ]
+      )
     );
   }
 }

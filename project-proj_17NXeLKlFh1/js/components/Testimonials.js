@@ -31,129 +31,351 @@ function Testimonials() {
       {
         id: 4,
         name: '赵同学',
-        age: 24,
+        age: 23,
         location: '成都',
-        testimonial: '易经八卦分析对我的学业规划提供了很好的参考，按照建议调整后，我的学习效率提高了很多。感谢神秘命运！',
-        avatar: 'https://images.unsplash.com/photo-1545167622-3a6ac756afa4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+        testimonial: '易经八卦分析让我对未来的学业有了明确的方向，按照建议调整后，学习效率大大提高，顺利考入理想的大学。',
+        avatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
         rating: 5
       },
       {
         id: 5,
         name: '陈先生',
-        age: 38,
+        age: 39,
         location: '深圳',
-        testimonial: '手相解读非常精准，尤其是关于健康方面的建议帮我及时发现了潜在的健康问题。命理师的专业水平令人信服！',
-        avatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+        testimonial: '手相解读非常精准，尤其是对我事业线的分析，帮我避开了一次重大的职业风险。神秘命运的老师真的很有经验！',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
         rating: 5
+      },
+      {
+        id: 6,
+        name: '林女士',
+        age: 31,
+        location: '杭州',
+        testimonial: '在做重要决定前咨询了神秘命运，得到的建议让我避开了很多潜在问题。现在每逢重要时刻，我都会来这里寻求指引。',
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+        rating: 4
       }
     ];
     
-    const [activeIndex, setActiveIndex] = React.useState(0);
-    const testimonialsPerPage = 3;
-    const totalPages = Math.ceil(testimonials.length / testimonialsPerPage);
+    const [currentTestimonialIndex, setCurrentTestimonialIndex] = React.useState(0);
+    const [autoplay, setAutoplay] = React.useState(true);
+    
+    React.useEffect(() => {
+      let interval;
+      if (autoplay) {
+        interval = setInterval(() => {
+          setCurrentTestimonialIndex((prevIndex) => 
+            prevIndex === testimonials.length - 1 ? 0 : prevIndex + 1
+          );
+        }, 5000);
+      }
+      
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    }, [autoplay, testimonials.length]);
     
     const handlePrev = () => {
-      setActiveIndex((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
+      setAutoplay(false);
+      setCurrentTestimonialIndex((prevIndex) => 
+        prevIndex === 0 ? testimonials.length - 1 : prevIndex - 1
+      );
     };
     
     const handleNext = () => {
-      setActiveIndex((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
+      setAutoplay(false);
+      setCurrentTestimonialIndex((prevIndex) => 
+        prevIndex === testimonials.length - 1 ? 0 : prevIndex + 1
+      );
     };
     
-    const displayedTestimonials = React.useMemo(() => {
-      const start = activeIndex * testimonialsPerPage;
-      const end = start + testimonialsPerPage;
-      return testimonials.slice(start, end);
-    }, [activeIndex]);
+    const handleDotClick = (index) => {
+      setAutoplay(false);
+      setCurrentTestimonialIndex(index);
+    };
     
     const renderStars = (rating) => {
-      return Array.from({ length: 5 }).map((_, index) => (
-        <i 
-          key={index}
-          className={`fas fa-star ${index < rating ? 'text-yellow-400' : 'text-gray-600'}`}
-        ></i>
-      ));
+      const stars = [];
+      for (let i = 1; i <= 5; i++) {
+        stars.push(
+          React.createElement('i', {
+            key: i,
+            className: `fas fa-star ${i <= rating ? 'text-yellow-500' : 'text-gray-600'}`
+          })
+        );
+      }
+      return stars;
     };
     
-    return (
-      <section data-name="testimonials" id="testimonials" className="py-16 bg-[#0c0c1d] relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-white">客户见证</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              听听我们的客户如何评价神秘命运的命理解读服务，每一次解读都是一段开启智慧的旅程
-            </p>
-          </div>
+    return React.createElement(
+      'section',
+      {
+        'data-name': "testimonials",
+        id: "testimonials",
+        className: "py-16 bg-[#0c0c1d]"
+      },
+      React.createElement(
+        'div',
+        {
+          className: "container mx-auto px-4"
+        },
+        [
+          React.createElement(
+            'div',
+            {
+              className: "text-center mb-12"
+            },
+            [
+              React.createElement(
+                'h2',
+                {
+                  className: "text-3xl font-bold mb-4 text-white"
+                },
+                "客户见证"
+              ),
+              React.createElement(
+                'p',
+                {
+                  className: "text-gray-300 max-w-2xl mx-auto"
+                },
+                "听听我们的客户如何评价神秘命运的命理解读服务，每一次解读都是一次生命轨迹的揭示"
+              )
+            ]
+          ),
           
-          <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {displayedTestimonials.map((testimonial) => (
-                <div 
-                  key={testimonial.id}
-                  className="testimonial-card p-6 rounded-lg border border-purple-900 shadow-lg fade-in"
-                >
-                  <div className="flex items-center mb-4">
-                    <img 
-                      src={testimonial.avatar} 
-                      alt={testimonial.name} 
-                      className="w-12 h-12 rounded-full object-cover border-2 border-purple-500"
-                    />
-                    <div className="ml-4">
-                      <h4 className="text-lg font-medium text-white">{testimonial.name}</h4>
-                      <p className="text-sm text-gray-400">{testimonial.age}岁，{testimonial.location}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    {renderStars(testimonial.rating)}
-                  </div>
-                  
-                  <blockquote className="text-gray-300 italic mb-4">
-                    "{testimonial.testimonial}"
-                  </blockquote>
-                </div>
-              ))}
-            </div>
-            
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-8 space-x-4">
-                <button 
-                  onClick={handlePrev}
-                  className="p-2 rounded-full bg-[#1a1a3a] border border-purple-900 text-purple-400 hover:text-white transition-colors"
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
+          // Featured testimonial
+          React.createElement(
+            'div',
+            {
+              className: "max-w-4xl mx-auto mb-12"
+            },
+            React.createElement(
+              'div',
+              {
+                className: "testimonial-card p-8 rounded-lg border border-purple-900 relative overflow-hidden"
+              },
+              [
+                // Quote icon
+                React.createElement(
+                  'div',
+                  {
+                    className: "absolute top-4 right-4 text-purple-800 opacity-20"
+                  },
+                  React.createElement('i', { className: "fas fa-quote-right text-6xl" })
+                ),
                 
-                <div className="flex space-x-2">
-                  {Array.from({ length: totalPages }).map((_, index) => (
-                    <button 
-                      key={index}
-                      onClick={() => setActiveIndex(index)}
-                      className={`w-3 h-3 rounded-full ${index === activeIndex ? 'bg-purple-500' : 'bg-purple-900'}`}
-                    ></button>
-                  ))}
-                </div>
+                // Testimonial content
+                React.createElement(
+                  'div',
+                  {
+                    className: "flex flex-col md:flex-row items-center"
+                  },
+                  [
+                    // Avatar
+                    React.createElement(
+                      'div',
+                      {
+                        className: "mb-6 md:mb-0 md:mr-8"
+                      },
+                      [
+                        React.createElement(
+                          'div',
+                          {
+                            className: "w-32 h-32 rounded-full overflow-hidden border-4 border-purple-900 shadow-lg"
+                          },
+                          React.createElement('img', {
+                            src: testimonials[currentTestimonialIndex].avatar,
+                            alt: testimonials[currentTestimonialIndex].name,
+                            className: "w-full h-full object-cover"
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            className: "flex justify-center mt-2"
+                          },
+                          renderStars(testimonials[currentTestimonialIndex].rating)
+                        )
+                      ]
+                    ),
+                    
+                    // Text content
+                    React.createElement(
+                      'div',
+                      {
+                        className: "flex-1"
+                      },
+                      [
+                        React.createElement(
+                          'p',
+                          {
+                            className: "text-gray-200 text-lg italic mb-6"
+                          },
+                          `"${testimonials[currentTestimonialIndex].testimonial}"`
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            className: "flex justify-between items-center"
+                          },
+                          [
+                            React.createElement(
+                              'div',
+                              {},
+                              [
+                                React.createElement(
+                                  'h4',
+                                  {
+                                    className: "text-white text-xl font-bold"
+                                  },
+                                  testimonials[currentTestimonialIndex].name
+                                ),
+                                React.createElement(
+                                  'p',
+                                  {
+                                    className: "text-gray-400"
+                                  },
+                                  `${testimonials[currentTestimonialIndex].age}岁，${testimonials[currentTestimonialIndex].location}`
+                                )
+                              ]
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                ),
                 
-                <button 
-                  onClick={handleNext}
-                  className="p-2 rounded-full bg-[#1a1a3a] border border-purple-900 text-purple-400 hover:text-white transition-colors"
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            )}
-          </div>
+                // Navigation
+                React.createElement(
+                  'div',
+                  {
+                    className: "flex justify-between mt-8"
+                  },
+                  [
+                    React.createElement(
+                      'button',
+                      {
+                        onClick: handlePrev,
+                        className: "p-2 bg-[#0c0c1d] rounded-full border border-purple-900 text-white hover:bg-purple-900 transition-colors"
+                      },
+                      React.createElement('i', { className: "fas fa-arrow-left" })
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        className: "flex space-x-2"
+                      },
+                      testimonials.map((_, index) => 
+                        React.createElement(
+                          'button',
+                          {
+                            key: index,
+                            onClick: () => handleDotClick(index),
+                            className: `w-3 h-3 rounded-full ${currentTestimonialIndex === index ? 'bg-purple-500' : 'bg-gray-600'}`
+                          }
+                        )
+                      )
+                    ),
+                    React.createElement(
+                      'button',
+                      {
+                        onClick: handleNext,
+                        className: "p-2 bg-[#0c0c1d] rounded-full border border-purple-900 text-white hover:bg-purple-900 transition-colors"
+                      },
+                      React.createElement('i', { className: "fas fa-arrow-right" })
+                    )
+                  ]
+                )
+              ]
+            )
+          ),
           
-          <div className="mt-12 text-center">
-            <a 
-              href="#fortune-form" 
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
-            >
-              我也要解读
-            </a>
-          </div>
-        </div>
-      </section>
+          // Testimonial grid
+          React.createElement(
+            'div',
+            {
+              className: "grid grid-cols-1 md:grid-cols-3 gap-6"
+            },
+            testimonials.map((testimonial, index) => {
+              // Skip the currently featured testimonial
+              if (index === currentTestimonialIndex) return null;
+              
+              // Only show up to 3 additional testimonials
+              if (index > currentTestimonialIndex && index <= currentTestimonialIndex + 3 || 
+                  (currentTestimonialIndex > testimonials.length - 3 && index < (currentTestimonialIndex + 3) % testimonials.length)) {
+                return React.createElement(
+                  'div',
+                  {
+                    key: testimonial.id,
+                    className: "testimonial-card p-6 rounded-lg border border-purple-900"
+                  },
+                  [
+                    React.createElement(
+                      'div',
+                      {
+                        className: "flex items-center mb-4"
+                      },
+                      [
+                        React.createElement(
+                          'div',
+                          {
+                            className: "w-12 h-12 rounded-full overflow-hidden mr-4"
+                          },
+                          React.createElement('img', {
+                            src: testimonial.avatar,
+                            alt: testimonial.name,
+                            className: "w-full h-full object-cover"
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          {},
+                          [
+                            React.createElement('h4', { className: "text-white font-medium" }, testimonial.name),
+                            React.createElement('p', { className: "text-sm text-gray-400" }, `${testimonial.age}岁，${testimonial.location}`)
+                          ]
+                        )
+                      ]
+                    ),
+                    React.createElement(
+                      'p',
+                      {
+                        className: "text-gray-300 text-sm mb-4"
+                      },
+                      `"${testimonial.testimonial}"`
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        className: "flex"
+                      },
+                      renderStars(testimonial.rating)
+                    )
+                  ]
+                );
+              }
+              return null;
+            }).filter(Boolean)
+          ),
+          
+          // Call to action
+          React.createElement(
+            'div',
+            {
+              className: "text-center mt-12"
+            },
+            React.createElement(
+              'a',
+              {
+                href: "#fortune-form",
+                className: "px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+              },
+              "立即体验命理解读"
+            )
+          )
+        ]
+      )
     );
   } catch (error) {
     console.error("Testimonials component error:", error);
